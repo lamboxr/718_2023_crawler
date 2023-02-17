@@ -170,7 +170,7 @@ def saveVideos(info, single_page_folder_path, page):
                     if cachePath is None:
                         logger.info('Cache video failed: %s - %s' % (output_video_path, m3u8_list[i]))
 
-                        # insert_into_error_log(page, i, m3u8_list[i], output_video_path, download_code)//TODO
+                        insert_into_error_log(page, i, m3u8_list[i], output_video_path, download_code) // TODO
                         continue
                     logger.info('cachePath: %s , savePath: %s' % (cachePath, output_video_path))
                     logger.info('Saving video "%s"...' % output_video_path)
@@ -214,8 +214,11 @@ def generate_images_info(info, single_page_folder_path):
         img_idx_pattern = '%0' + str(len(str(len(img_urls)))) + 'd'
     idx = 1
     for img_url in img_urls:
+        prefix = img_url.split(';')[0].split('/')[1]
+        if prefix == 'jpeg':
+            prefix = 'jpg'
         images_info[os.path.join(single_page_folder_path, '%s_%s.%s' % (
-        title, img_idx_pattern % idx if len(img_urls) > 1 else '', img_url.split(';')[0].split('/')[1]))] = img_url
+            title, img_idx_pattern % idx if len(img_urls) > 1 else '', prefix))] = img_url
         idx += 1
     return images_info
 
