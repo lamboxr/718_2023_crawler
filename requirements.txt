@@ -1,0 +1,6 @@
+python.exe -m pip install --upgrade pip
+requests
+wheel
+lxml
+pycryptodome
+fake_useragent
