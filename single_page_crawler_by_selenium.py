@@ -79,61 +79,9 @@ def crawl_infos_by_selenium(page):
         return info
 
 
-def crawl_by_page(page):
-    status_code = 404
-    try:
-        url = common_util.get_page_url(page)
-        logger.info("Crawling page: '%s'..." % url)
-        info = {AttributeCode.URL: url, AttributeCode.STATUS_CODE: None, AttributeCode.TITLE: None,
-                AttributeCode.DATE: None, AttributeCode.LINKS: None, AttributeCode.CONTENT: None,
-                AttributeCode.VIDEO_URLS: None, AttributeCode.IMAGE_URLS: None}
-
-        resp = net_util.request(url, 20)
-        status_code = resp.status_code
-        info[AttributeCode.STATUS_CODE] = status_code
-        logger.info("Status code of page:%s is '%s'..." % (url, status_code))
-        if status_code == crawl_404():
-            logger.info("Page 404: '%s'..." % url)
-            constraints.img_num_in_page[page] = {'code': status_code, 'cpt_num': 0, 'folder_path': ''}
-            return info
-        if status_code == 200:
-            # 使用xpath
-            page_source = etree.HTML(resp.text)
-
-            # date
-            logger.info('Crawling date in %s' % url)
-            info[AttributeCode.DATE] = crawl_date(page_source)
-            # title
-            logger.info('Crawling title in %s' % url)
-            info[AttributeCode.TITLE] = crawl_title(page_source)
-            # links
-            logger.info('Crawling links in %s' % url)
-            info[AttributeCode.LINKS] = crawl_links(page_source)
-            # content
-            logger.info('Crawling content in %s' % url)
-            info[AttributeCode.CONTENT] = crawl_content(page_source)
-            # videos
-            logger.info('Crawling videos in %s' % url)
-            info[AttributeCode.VIDEO_URLS] = crawl_videos(page_source)
-            # images
-            logger.info('Crawling images in %s' % url)
-            info[AttributeCode.IMAGE_URLS] = crawl_imgs(page_source)
-            return info
-
-    except requests.exceptions.ConnectionError as rec:
-        logger.error(rec)
-        constraints.img_num_in_page[page] = {'code': status_code, 'cpt_num': 0, 'folder_path': ''}
-        return info
-    except Exception as e:
-        logger.error(e)
-        logger.info("Request page error: '%s'." % url)
-        constraints.img_num_in_page[page] = {'code': status_code, 'cpt_num': 0, 'folder_path': ''}
-        return info
-
-
 # 爬取h3
 def crawl_404(html):
-    content404_elements = html.xpath('//div[@id="content404"]')
+    content404_elements = html.xpath('//div[@class="content404-wrapper"]')
     logger.debug('content404_elements %s', content404_elements)
     if len(content404_elements) > 0:
         return 404
