@@ -16,6 +16,7 @@ domain = 'https://www.u718.sx'
 base_url_pattern = "https://www.u718.sx/archives/%d"
 year = 2023
 
+timeout = 30
 out_put = 'D:\\output\\718\\xxx'
 cache_root = 'D:\\_'
 

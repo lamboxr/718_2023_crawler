@@ -26,7 +26,7 @@ def crawl_infos_by_selenium(page):
                 AttributeCode.DATE: None, AttributeCode.LINKS: None, AttributeCode.CONTENT: None,
                 AttributeCode.VIDEO_URLS: None, AttributeCode.IMAGE_URLS: None}
 
-        edge = getDriver(20)
+        edge = getDriver(constraints.timeout)
         try:
             edge.get(url)
         except Exception as e:
