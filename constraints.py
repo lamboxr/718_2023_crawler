@@ -1,5 +1,6 @@
 # -*- coding:utf-8 -*-
 download_video_count = 0
+download_image_count = 0
 switch_on_proxy = False
 
 proxies ={
@@ -9,15 +10,15 @@ proxies ={
 # proxy_host = "127.0.0.1"
 proxy_host = "47.97.1.34"
 proxy_port = 5010
-webbrowser_driver_path = 'drivers/edgedriver_win64/103.0.1264.71/msedgedriver.exe'
+edge_driver_path = 'drivers/edgedriver_win64/110.0.1587.49/msedgedriver.exe'
 # driver download url
 # https://www.selenium.dev/zh-cn/documentation/webdriver/getting_started/install_drivers/
 domain = 'https://www.u718.sx'
 base_url_pattern = "https://www.u718.sx/archives/%d"
 year = 2023
 
-timeout = 30
-out_put = 'D:\\output\\718\\xxx'
+timeout = 60
+out_put = 'D:\\output\\718\\decrypted'
 cache_root = 'D:\\_'
 
 img_num_in_page = {}

@@ -88,6 +88,7 @@ if __name__ == '__main__':
         Seven18Crawler_multithread().crawl1()
     finally:
         end = time.time()
-        logger.info('Download video times: %d' %  constraints.download_video_count)
+        logger.info('Download videos times: %d' % constraints.download_video_count)
+        logger.info('Download images times: %d' % constraints.download_image_count)
         logger.info('Cost time %f seconds.' % (end - start))
         logger.info('Closing app...')

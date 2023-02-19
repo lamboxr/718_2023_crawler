@@ -108,6 +108,8 @@ def generate_single_page_folder_path(page_idx, info):
 
 
 def saveContent(info, single_page_folder_path):
+    m3u8s_url = ''
+    imgs_url = ''
     if info[AttributeCode.STATUS_CODE] == 404:
         return
     links = info[AttributeCode.LINKS]
@@ -117,17 +119,20 @@ def saveContent(info, single_page_folder_path):
             link_txt += '%s\n%s\n\n' % (p_title, link)
     m3u8_list = info[AttributeCode.VIDEO_URLS]
     img_list = info[AttributeCode.IMAGE_URLS]
-    m3u8s_url = '视频链接(%d):\n' % len(info[AttributeCode.VIDEO_URLS])
-    imgs_url = '图片链接(%d):\n' % len(info[AttributeCode.IMAGE_URLS])
+    if m3u8_list is not None:
+        m3u8s_url += '视频链接(%d):\n' % len(info[AttributeCode.VIDEO_URLS])
+    # imgs_url = '图片链接(%d):\n' % len(info[AttributeCode.IMAGE_URLS])
+    if img_list is not None:
+        imgs_url = '图片数量: %d:\n' % len(info[AttributeCode.IMAGE_URLS])
     if m3u8_list is not None and len(m3u8_list) > 0:
         for i in m3u8_list:
             m3u8s_url += i + '\n'
-    if img_list is not None and len(img_list) > 0:
-        img_idx_pattern = '%0' + str(len(str(len(img_list)))) + 'd'
-        idx = 1
-        for i in img_list:
-            imgs_url += '%s: %s%s' % (img_idx_pattern % idx, i, '\n')
-            idx += 1
+    # if img_list is not None and len(img_list) > 0:
+    #     img_idx_pattern = '%0' + str(len(str(len(img_list)))) + 'd'
+    #     idx = 1
+    #     for i in img_list:
+    #         imgs_url += '%s: %s%s' % (img_idx_pattern % idx, i, '\n')
+    #         idx += 1
 
     txt_file_path = os.path.join(single_page_folder_path, '%s%s' % (info[AttributeCode.TITLE], '.txt'))
 
@@ -170,7 +175,7 @@ def saveVideos(info, single_page_folder_path, page):
                     if cachePath is None:
                         logger.info('Cache video failed: %s - %s' % (output_video_path, m3u8_list[i]))
 
-                        insert_into_error_log(page, i, m3u8_list[i], output_video_path, download_code) // TODO
+                        insert_into_error_log(page, i, m3u8_list[i], output_video_path, download_code)  # TODO
                         continue
                     logger.info('cachePath: %s , savePath: %s' % (cachePath, output_video_path))
                     logger.info('Saving video "%s"...' % output_video_path)
@@ -198,6 +203,7 @@ def saveImgs(info, single_page_folder_path):
             else:
                 for image_path, images_url in images_info.items():
                     image_downloader.save(images_url, image_path)
+            constraints.download_image_count += 1
 
 
 def is_images_saved(images_info, single_page_folder_path):

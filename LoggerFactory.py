@@ -17,14 +17,13 @@ import logging
 
 
 def getLogger(appName):
-    formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
-
     logger = logging.getLogger(appName)
     logger.setLevel(level=logging.DEBUG)
 
     logFile = '718.log'
     file_handler = logging.FileHandler(logFile, encoding='utf-8')
     file_handler.setLevel(logging.DEBUG)
+    formatter = logging.Formatter("%(asctime)s - %(filename)s[line:%(lineno)d] - %(levelname)s - %(message)s")
     file_handler.setFormatter(formatter)
     if not logger.hasHandlers():
         logger.addHandler(file_handler)
@@ -33,6 +32,7 @@ def getLogger(appName):
     console_handler.setFormatter(formatter)
     console_handler.setLevel(logging.DEBUG)
     logger.addHandler(console_handler)
+
     return logger
 
 # def getLogger():
