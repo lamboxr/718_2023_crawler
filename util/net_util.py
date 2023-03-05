@@ -3,9 +3,8 @@ import requests
 from fake_useragent import UserAgent
 from requests.adapters import HTTPAdapter
 
-import LoggerFactory
-import constraints
-from util import net_util
+from factory import LoggerFactory
+from config import constraints
 
 logger = LoggerFactory.getLogger(__name__)
 
@@ -22,10 +21,10 @@ def delete_proxy(proxy):
 
 
 def request(url, timeout=None, stream=None, max_retries=None):
+    ua = UserAgent()
+    headers = {"User-Agent": ua.random}
     if constraints.switch_on_proxy:
         # 请求头
-        ua = UserAgent()
-        headers = {"User-Agent": ua.random}
 
         # proxy = net_util.get_proxy().get("proxy")
         # proxies = {"http": "http://{}".format(proxy)}
@@ -41,7 +40,7 @@ def request(url, timeout=None, stream=None, max_retries=None):
         # logger.info('request data in : %s ...' % url)
         return s.get(url, headers=headers, proxies=constraints.proxies, timeout=timeout, stream=stream)
     else:
-        return requests.get(url, timeout=timeout)
+        return requests.get(url, headers=headers, timeout=timeout)
 
 
 def down4img(url, output_name, type):

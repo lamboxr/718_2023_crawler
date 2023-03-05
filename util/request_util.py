@@ -2,7 +2,7 @@
 import requests
 from fake_useragent import UserAgent
 
-import LoggerFactory
+from factory import LoggerFactory
 from util import net_util
 
 logger = LoggerFactory.getLogger(__name__)

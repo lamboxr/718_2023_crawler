@@ -2,8 +2,8 @@
 import os
 import pathlib
 
-import LoggerFactory
-import constraints
+from factory import LoggerFactory
+from config import constraints
 
 output = constraints.out_put
 

@@ -1,5 +1,5 @@
 # -*- coding:utf-8 -*-
-import constraints
+from config import constraints
 
 
 def get_page_url(page):

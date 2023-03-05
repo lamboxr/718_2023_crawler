@@ -3,7 +3,7 @@ import base64
 import logging
 import os.path
 
-import LoggerFactory
+from factory import LoggerFactory
 
 logger = LoggerFactory.getLogger(__name__)
 

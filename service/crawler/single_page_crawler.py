@@ -5,10 +5,10 @@ import re
 import requests
 from lxml import etree
 
-import LoggerFactory
-import constraints
+from factory import LoggerFactory
+from config import constraints
 # 获取logger实例，如果参数为空则返回root logger
-from code_enum import AttributeCode
+from config.code_enum import AttributeCode
 from util import common_util, net_util
 
 logger = LoggerFactory.getLogger(__name__)

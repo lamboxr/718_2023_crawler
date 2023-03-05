@@ -2,15 +2,18 @@
 # self is a sample Python script.
 import json
 import re
+import time
 
 import requests
+from fake_useragent import UserAgent
 from lxml import etree
 from selenium import webdriver
+from selenium.webdriver.edge.options import Options
 from selenium.webdriver.edge.service import Service
-import LoggerFactory
-import constraints
+from factory import LoggerFactory
+from config import constraints
 # 获取logger实例，如果参数为空则返回root logger
-from code_enum import AttributeCode
+from config.code_enum import AttributeCode
 from util import common_util, net_util
 
 logger = LoggerFactory.getLogger(__name__)
@@ -20,12 +23,14 @@ def crawl_infos_by_selenium(page):
     status_code = 404
     url = common_util.get_page_url(page)
     logger.info("Crawling page: '%s'..." % url)
-    info = {AttributeCode.URL: url, AttributeCode.STATUS_CODE: status_code, AttributeCode.TITLE: None,
-            AttributeCode.DATE: None, AttributeCode.LINKS: None, AttributeCode.CONTENT: None,
-            AttributeCode.VIDEO_URLS: None, AttributeCode.IMAGE_URLS: None}
+    info = {AttributeCode.URL.value: url, AttributeCode.STATUS_CODE.value: status_code, AttributeCode.TITLE.value: None,
+            AttributeCode.DATE.value: None, AttributeCode.LINKS.value: None, AttributeCode.CONTENT.value: None,
+            AttributeCode.VIDEO_URLS.value: None, AttributeCode.IMAGE_URLS.value: None}
     try:
 
+        # if 1 == 1:
         if net_util.request(url).status_code == 200:
+            logger.info('Check 200 by requests: %s ' % url)
             edge = getDriver(constraints.timeout)
             try:
                 edge.get(url)
@@ -41,7 +46,7 @@ def crawl_infos_by_selenium(page):
 
             html = etree.HTML(edge.page_source)
             status_code = crawl_404(html)
-            info[AttributeCode.STATUS_CODE] = status_code
+            info[AttributeCode.STATUS_CODE.value] = status_code
             if status_code == 404:
                 logger.info("Page 404: '%s'..." % url)
                 constraints.img_num_in_page[page] = {'code': status_code, 'cpt_num': 0, 'folder_path': ''}
@@ -49,23 +54,27 @@ def crawl_infos_by_selenium(page):
             if status_code == 200:
                 # title
                 logger.info('Crawling title in %s' % url)
-                info[AttributeCode.TITLE] = crawl_title(html)
+                info[AttributeCode.TITLE.value] = crawl_title(html)
 
                 # date
                 logger.info('Crawling date in %s' % url)
-                info[AttributeCode.DATE] = crawl_date(html)
+                info[AttributeCode.DATE.value] = crawl_date(html)
 
                 # content
                 logger.info('Crawling content in %s' % url)
-                info[AttributeCode.CONTENT] = crawl_content(html)
+                info[AttributeCode.CONTENT.value] = crawl_content(html)
 
                 # images
                 logger.info('Crawling images in %s' % url)
-                info[AttributeCode.IMAGE_URLS] = crawl_imgs(html)
+                info[AttributeCode.IMAGE_URLS.value] = crawl_imgs(html)
 
                 # videos
                 logger.info('Crawling videos in %s' % url)
-                info[AttributeCode.VIDEO_URLS] = crawl_videos(html)
+                info[AttributeCode.VIDEO_URLS.value] = crawl_all_videos(html)
+        elif net_util.request(url).status_code == 404:
+            logger.info('Check 404 by requests: ulr is %s ' % url)
+            logger.info('Sleeping 5 seconds...')
+            time.sleep(5)
         return info
 
     except requests.exceptions.ConnectionError as rec:
@@ -181,6 +190,37 @@ def crawl_videos(html):
     return urls
 
 
+def crawl_all_videos(html):
+    #判断是否 同时存在 极速线路 和快速线路
+    #<div class="content-tabs-head">
+        #<div class="content-tab-title selected" role="tab" data-tab-index="1">极速线路</div>
+        #<div class="content-tab-title " role="tab" data-tab-index="2">快速线路</div>
+    #</div>
+    has_jisu = False
+    has_kuaisu = False
+    tabs = html.xpath('//div[starts-with(@class,"content-tab-title")]')
+    for i in tabs:
+        if i.text == "极速线路":
+            has_jisu = True
+            continue
+        elif i.text == "快速线路":
+            has_kuaisu = True
+    if has_jisu and has_kuaisu:
+        return crawl_videos(html)
+    else:
+        urls = []
+        data_configs = html.xpath('//div[starts-with(@class,"dplayer dplayer-no-danmaku")]//@data-config')
+        for data_config in data_configs:
+            if len(data_config):
+                try:
+                    url = json.loads(data_config)['video']['url']
+                    urls.append(url)
+                except Exception as e:
+                    print('Parsing m3u8 url error')
+        urls = list(set(urls))
+        return urls
+
+
 def crawl_tab_1(iframe_url):
     resp = net_util.request(iframe_url)
     m3u8_list = []
@@ -220,9 +260,13 @@ def crawl_imgs(html):
 
 def getDriver(timeout):
     s = Service(constraints.edge_driver_path)
-    edge = webdriver.Edge(service=s)
+    edge_options = Options()
+    edge_options.add_argument(f'user-agent={UserAgent().random}')
+    # logger.info('Edge user-agent: %s' % edge_options)
+    edge = webdriver.Edge(service=s, options=edge_options)
     edge.set_window_size(100, 50)
     edge.minimize_window()
     edge.set_page_load_timeout(timeout)
     edge.set_script_timeout(timeout)
+    logger.info("navigator.userAgent: %s" % edge.execute_script("return navigator.userAgent"))
     return edge

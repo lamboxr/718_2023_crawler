@@ -4,7 +4,7 @@ import os.path
 import pathlib
 import shutil
 
-import LoggerFactory
+from factory import LoggerFactory
 
 logger = LoggerFactory.getLogger(__name__)
 

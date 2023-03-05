@@ -8,13 +8,11 @@ import pathlib
 import time
 from concurrent.futures import FIRST_COMPLETED, wait, ALL_COMPLETED
 
-import LoggerFactory
-import constraints
-import page_config
-import single_page_crawler_by_selenium
-import single_page_saver
+from factory import LoggerFactory
+from config import page_config, constraints
+from service.crawler import single_page_crawler_by_selenium, _200_collector
+from service.saver import single_page_saver
 from t.BoundedThreadPoolExecutor import BoundedThreadPoolExecutor
-from util import common_util
 
 logger = LoggerFactory.getLogger(__name__)
 
@@ -64,7 +62,8 @@ class Seven18Crawler_multithread():
             _ = start_page
             start_page = end_page
             end_page = _
-
+        """
+        #old逻辑
         if constraints.switch_on_main_thread:
             with BoundedThreadPoolExecutor(max_workers=constraints.max_size_in_main_threadpool) as t:
                 all_tasks = [t.submit(self.handle_single_page, page) for page in
@@ -74,6 +73,20 @@ class Seven18Crawler_multithread():
         else:
             for page in range(end_page, start_page - 1, -1):
                 self.handle_single_page(page)
+        """
+        with BoundedThreadPoolExecutor(max_workers=constraints.check_200_thread_num) as t:
+            all_tasks = [t.submit(_200_collector.collect_200_by_page, page) for page in
+                         range(end_page, start_page - 1, -1)]
+            wait(all_tasks, return_when=ALL_COMPLETED)
+
+        constraints.list_200.sort()
+        constraints.list_404.sort()
+        logger.info('200 page: %s' % constraints.list_200)
+        logger.info('404 page: %s' % constraints.list_404)
+        for page in constraints.list_200:
+            self.handle_single_page(page)
+        for page in constraints.list_404:
+            single_page_saver.createSingleFile(page, None)
 
     def handle_single_page(self, page):
         # url = common_util.get_page_url(page)
@@ -84,6 +97,9 @@ class Seven18Crawler_multithread():
 if __name__ == '__main__':
     start = time.time()
     logger.info('App launched...')
+    logger.info('==========Main thread : %s ==========' % (
+        'on ,thread num: %d' % constraints.max_size_in_main_threadpool if constraints.switch_on_main_thread else 'off'))
+    logger.info('==========Proxy : %s ==========' % ('on' if constraints.switch_on_proxy else 'off'))
     try:
         Seven18Crawler_multithread().crawl1()
     finally:

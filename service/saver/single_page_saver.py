@@ -10,12 +10,11 @@ import pathlib
 import random
 from concurrent.futures import wait, ALL_COMPLETED
 
-import LoggerFactory
-import constraints
-import image_downloader
-import m3u8_downloader
+from factory import LoggerFactory
+from config import constraints
+from service.downloader import m3u8_downloader, image_downloader
 import seven18_crawler
-from code_enum import AttributeCode, DownloadCode
+from config.code_enum import AttributeCode, DownloadCode
 from t.BoundedThreadPoolExecutor import BoundedThreadPoolExecutor
 from util import common_util, file_util, net_util
 
@@ -27,17 +26,17 @@ pathlib.Path(constraints.out_put).mkdir(parents=True, exist_ok=True)
 def save_by_page(page, info):
     url = common_util.get_page_url(page)
     if info is None:
-        info = {AttributeCode.URL: url}
+        info = {AttributeCode.URL.value: url}
         createSingleFile(page, info)
         return
-    elif info[AttributeCode.STATUS_CODE] is None:
+    elif info[AttributeCode.STATUS_CODE.value] is None:
         return
-    elif info[AttributeCode.STATUS_CODE] == 404:
+    elif info[AttributeCode.STATUS_CODE.value] == 404:
         logger.info("Page '%s' is 404, continue..." % url)
         createSingleFile(page, info)
         return
-    elif (info[AttributeCode.VIDEO_URLS] is None or len(info[AttributeCode.VIDEO_URLS]) == 0) and (
-            info[AttributeCode.IMAGE_URLS] is None or len(info[AttributeCode.IMAGE_URLS]) == 0):
+    elif (info[AttributeCode.VIDEO_URLS.value] is None or len(info[AttributeCode.VIDEO_URLS.value]) == 0) and (
+            info[AttributeCode.IMAGE_URLS.value] is None or len(info[AttributeCode.IMAGE_URLS.value]) == 0):
         # 图片 视频均不存在
         logger.info('Page "%s" has no media, continue...' % url)
         createSingleFile(page, info)
@@ -53,28 +52,28 @@ def createSingleFile(page, info):
     txt = ''
     date_in_path = ''
     title_in_path = ''
-    url = info[AttributeCode.URL]
-    if len(info) == 1 or info[AttributeCode.STATUS_CODE] == 404:
-        txt = url
+    url = info[AttributeCode.URL.value]
+    if info is None or len(info) == 1 or info[AttributeCode.STATUS_CODE.value] == 404:
+        txt = common_util.get_page_url(page)
         file_path += '.txt'
-    elif info[AttributeCode.STATUS_CODE] == 200:
-        txt += '%s\n\n' % info[AttributeCode.URL]
-        if info[AttributeCode.DATE] is not None:  # 日期不为空
-            date_in_path = '%s%s' % ('_', info[AttributeCode.DATE])  # output/idx_date
-            txt += '%s%s' % (info[AttributeCode.TITLE], '\n')
+    elif info[AttributeCode.STATUS_CODE.value] == 200:
+        txt += '%s\n\n' % info[AttributeCode.URL.value]
+        if info[AttributeCode.DATE.value] is not None:  # 日期不为空
+            date_in_path = '%s%s' % ('_', info[AttributeCode.DATE.value])  # output/idx_date
+            txt += '%s%s' % (info[AttributeCode.TITLE.value], '\n')
 
-        title = info[AttributeCode.TITLE]
+        title = info[AttributeCode.TITLE.value]
         if title is not None:  # 如果标题不为空  # output/idx_date_title
             title_in_path = '%s%s' % ('_', title)  # output/idx_date_title
             txt += '%s%s' % (title, '\n')
 
-        links = info[AttributeCode.LINKS]
+        links = info[AttributeCode.LINKS.value]
         if links is not None:
             for p_title, link in links.items():
                 txt += '%s\n%s\n\n' % (p_title, link)
 
-        if info[AttributeCode.CONTENT] is not None:  # 如果content不为空
-            txt += info[AttributeCode.CONTENT]
+        if info[AttributeCode.CONTENT.value] is not None:  # 如果content不为空
+            txt += info[AttributeCode.CONTENT.value]
 
         file_path = '%s%s%s%s' % (file_path, date_in_path, title_in_path, '.txt')
     if os.path.exists(file_path):
@@ -104,26 +103,26 @@ def saveData(page_idx, info):
 def generate_single_page_folder_path(page_idx, info):
     return os.path.join(constraints.out_put,
                         '%s%s%s%s%s' % (
-                            '%05d' % page_idx, '_', info[AttributeCode.DATE], '_', info[AttributeCode.TITLE]))
+                            '%05d' % page_idx, '_', info[AttributeCode.DATE.value], '_', info[AttributeCode.TITLE.value]))
 
 
 def saveContent(info, single_page_folder_path):
     m3u8s_url = ''
     imgs_url = ''
-    if info[AttributeCode.STATUS_CODE] == 404:
+    if info[AttributeCode.STATUS_CODE.value] == 404:
         return
-    links = info[AttributeCode.LINKS]
+    links = info[AttributeCode.LINKS.value]
     link_txt = ''
     if links is not None:
         for p_title, link in links.items():
             link_txt += '%s\n%s\n\n' % (p_title, link)
-    m3u8_list = info[AttributeCode.VIDEO_URLS]
-    img_list = info[AttributeCode.IMAGE_URLS]
+    m3u8_list = info[AttributeCode.VIDEO_URLS.value]
+    img_list = info[AttributeCode.IMAGE_URLS.value]
     if m3u8_list is not None:
-        m3u8s_url += '视频链接(%d):\n' % len(info[AttributeCode.VIDEO_URLS])
-    # imgs_url = '图片链接(%d):\n' % len(info[AttributeCode.IMAGE_URLS])
+        m3u8s_url += '视频链接(%d):\n' % len(info[AttributeCode.VIDEO_URLS.value])
+    # imgs_url = '图片链接(%d):\n' % len(info[AttributeCode.IMAGE_URLS.value])
     if img_list is not None:
-        imgs_url = '图片数量: %d:\n' % len(info[AttributeCode.IMAGE_URLS])
+        imgs_url = '图片数量: %d:\n' % len(info[AttributeCode.IMAGE_URLS.value])
     if m3u8_list is not None and len(m3u8_list) > 0:
         for i in m3u8_list:
             m3u8s_url += i + '\n'
@@ -134,7 +133,7 @@ def saveContent(info, single_page_folder_path):
     #         imgs_url += '%s: %s%s' % (img_idx_pattern % idx, i, '\n')
     #         idx += 1
 
-    txt_file_path = os.path.join(single_page_folder_path, '%s%s' % (info[AttributeCode.TITLE], '.txt'))
+    txt_file_path = os.path.join(single_page_folder_path, '%s%s' % (info[AttributeCode.TITLE.value], '.txt'))
 
     if os.path.exists(txt_file_path):
         # logger.info('Skip saving existing content file: %s ' % filePath)
@@ -145,13 +144,13 @@ def saveContent(info, single_page_folder_path):
     with open(txt_file_path, 'w', encoding='utf-8') as file_object:
         file_object.write(
             '%s\n\n%s\n%s\n%s\n%s\n%s\n' % (
-                info[AttributeCode.URL], info[AttributeCode.TITLE], info[AttributeCode.CONTENT], link_txt, m3u8s_url,
+                info[AttributeCode.URL.value], info[AttributeCode.TITLE.value], info[AttributeCode.CONTENT.value], link_txt, m3u8s_url,
                 imgs_url))
         file_object.close()
 
 
 def saveVideos(info, single_page_folder_path, page):
-    m3u8_list = info[AttributeCode.VIDEO_URLS]
+    m3u8_list = info[AttributeCode.VIDEO_URLS.value]
     if m3u8_list is not None:
 
         suffix = ''
@@ -161,7 +160,7 @@ def saveVideos(info, single_page_folder_path, page):
             if len(m3u8_list) > 1:
                 suffix = video_idx_pattern % (i + 1)
             output_video_path = os.path.join(single_page_folder_path,
-                                             '%s%s%s' % (info[AttributeCode.TITLE], suffix, '.mp4'))
+                                             '%s%s%s' % (info[AttributeCode.TITLE.value], suffix, '.mp4'))
             if os.path.exists(output_video_path):
                 logger.info('Skip saving existing video: %s ' % output_video_path)
             else:
@@ -190,10 +189,10 @@ def saveImgs(info, single_page_folder_path):
     images_info = generate_images_info(info, single_page_folder_path)
     if len(images_info) > 0:
         if is_images_saved(images_info=images_info, single_page_folder_path=single_page_folder_path):
-            logger.info('Skipping to save %d images in page %s' % (len(images_info), info[AttributeCode.URL]))
+            logger.info('Skipping to save %d images in page %s' % (len(images_info), info[AttributeCode.URL.value]))
             return
         else:
-            logger.info('Saving %d images in page %s' % (len(images_info), info[AttributeCode.URL]))
+            logger.info('Saving %d images in page %s' % (len(images_info), info[AttributeCode.URL.value]))
             if constraints.switch_on_img_thread:
                 with BoundedThreadPoolExecutor(max_workers=constraints.max_image_size_in_threadpool) as t:
                     all_tasks = [t.submit(lambda p: image_downloader.save(*p),
@@ -214,8 +213,8 @@ def is_images_saved(images_info, single_page_folder_path):
 def generate_images_info(info, single_page_folder_path):
     images_info = {}
     img_idx_pattern = ''
-    title = info[AttributeCode.TITLE]
-    img_urls = info[AttributeCode.IMAGE_URLS]
+    title = info[AttributeCode.TITLE.value]
+    img_urls = info[AttributeCode.IMAGE_URLS.value]
     if len(img_urls) > 1:
         img_idx_pattern = '%0' + str(len(str(len(img_urls)))) + 'd'
     idx = 1
