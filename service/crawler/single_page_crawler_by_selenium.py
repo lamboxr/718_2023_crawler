@@ -42,7 +42,7 @@ def crawl_infos_by_selenium(page):
                 edge.execute_script("window.stop()")
             # status_code = resp.status_code
 
-            logger.info("Status code of page:%s is '%s'..." % (url, status_code))
+            # logger.info("Status code of page:%s is '%s'..." % (url, status_code))
 
             html = etree.HTML(edge.page_source)
             status_code = crawl_404(html)
