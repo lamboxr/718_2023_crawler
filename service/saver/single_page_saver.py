@@ -52,11 +52,12 @@ def createSingleFile(page, info):
     txt = ''
     date_in_path = ''
     title_in_path = ''
-    url = info[AttributeCode.URL.value]
+
     if info is None or len(info) == 1 or info[AttributeCode.STATUS_CODE.value] == 404:
         txt = common_util.get_page_url(page)
         file_path += '.txt'
     elif info[AttributeCode.STATUS_CODE.value] == 200:
+        # url = info[AttributeCode.URL.value]
         txt += '%s\n\n' % info[AttributeCode.URL.value]
         if info[AttributeCode.DATE.value] is not None:  # 日期不为空
             date_in_path = '%s%s' % ('_', info[AttributeCode.DATE.value])  # output/idx_date

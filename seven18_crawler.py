@@ -81,12 +81,14 @@ class Seven18Crawler_multithread():
 
         constraints.list_200.sort()
         constraints.list_404.sort()
-        logger.info('200 page: %s' % constraints.list_200)
-        logger.info('404 page: %s' % constraints.list_404)
+        logger.info('200 pages: %s' % constraints.list_200)
+        logger.info('404 pages: %s' % constraints.list_404)
         for page in constraints.list_200:
             self.handle_single_page(page)
         for page in constraints.list_404:
             single_page_saver.createSingleFile(page, None)
+
+        logger.info('200 pages: %s' % constraints.list_200)
 
     def handle_single_page(self, page):
         # url = common_util.get_page_url(page)
