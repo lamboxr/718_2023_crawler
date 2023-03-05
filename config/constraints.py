@@ -2,6 +2,9 @@
 download_video_count = 0
 download_image_count = 0
 download_bg_image_count = 0
+skip_download_video_count = 0
+skip_download_image_count = 0
+skip_download_bg_image_count = 0
 switch_on_proxy = False
 
 proxies ={

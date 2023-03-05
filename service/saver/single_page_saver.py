@@ -13,7 +13,7 @@ from concurrent.futures import wait, ALL_COMPLETED
 from factory import LoggerFactory
 from config import constraints
 from service.downloader import m3u8_downloader, image_downloader
-import seven18_crawler
+from service.crawler import seven18_crawler
 from config.code_enum import AttributeCode, DownloadCode
 from t.BoundedThreadPoolExecutor import BoundedThreadPoolExecutor
 from util import common_util, file_util, net_util
@@ -167,6 +167,7 @@ def saveVideos(info, single_page_folder_path, page):
                                              '%s%s%s' % (info[AttributeCode.TITLE.value], suffix, '.mp4'))
             if os.path.exists(output_video_path):
                 logger.info('Skip saving existing video: %s ' % output_video_path)
+                constraints.skip_download_video_count += 1
             else:
                 logger.info('Downloading fragments of video: "%s"...' % output_video_path)
                 fragments_folder_name = '%d%s' % (
@@ -194,6 +195,7 @@ def saveImgs(info, single_page_folder_path):
     if len(images_info) > 0:
         if is_images_saved(images_info=images_info, single_page_folder_path=single_page_folder_path):
             logger.info('Skipping to save %d images in page %s' % (len(images_info), info[AttributeCode.URL.value]))
+            constraints.skip_download_image_count += 1
             return
         else:
             logger.info('Saving %d images in page %s' % (len(images_info), info[AttributeCode.URL.value]))
@@ -213,19 +215,20 @@ def saveBackGroundImgs(info, single_page_folder_path):
     bg_imgs_info = generate_bg_images_info(info, single_page_folder_path)
     if len(bg_imgs_info) > 0:
         if is_bg_images_saved(images_info=bg_imgs_info, single_page_folder_path=single_page_folder_path):
-            logger.info('Skipping to save %d images in page %s' % (len(bg_imgs_info), info[AttributeCode.URL.value]))
+            logger.info('Skipping to save %d background images in page %s' % (len(bg_imgs_info), info[AttributeCode.URL.value]))
+            constraints.skip_download_bg_image_count += 1
             return
         else:
-            logger.info('Saving %d images in page %s' % (len(bg_imgs_info), info[AttributeCode.URL.value]))
-            if constraints.switch_on_img_thread:
-                with BoundedThreadPoolExecutor(max_workers=constraints.max_image_size_in_threadpool) as t:
-                    all_tasks = [t.submit(lambda p: image_downloader.save(*p),
-                                          [images_url, image_path]) for image_path, images_url in
-                                 bg_imgs_info.items()]
-                    wait(all_tasks, return_when=ALL_COMPLETED)
-            else:
-                for image_path, images_url in bg_imgs_info.items():
-                    image_downloader.save(images_url, image_path)
+            logger.info('Saving %d background images in page %s' % (len(bg_imgs_info), info[AttributeCode.URL.value]))
+            # if constraints.switch_on_img_thread:
+            #     with BoundedThreadPoolExecutor(max_workers=constraints.max_image_size_in_threadpool) as t:
+            #         all_tasks = [t.submit(lambda p: image_downloader.save(*p),
+            #                               [images_url, image_path]) for image_path, images_url in
+            #                      bg_imgs_info.items()]
+            #         wait(all_tasks, return_when=ALL_COMPLETED)
+            # else:
+            for image_path, images_url in bg_imgs_info.items():
+                image_downloader.save(images_url, image_path)
             constraints.download_bg_image_count += 1
 
 

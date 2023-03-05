@@ -19,7 +19,7 @@ from t.BoundedThreadPoolExecutor import BoundedThreadPoolExecutor
 logger = LoggerFactory.getLogger(__name__)
 
 time_stamp = time.strftime('%Y-%m-%d %H%M%S', time.localtime())
-error_log_folder = os.path.join(os.getcwd(), 'error_log')
+error_log_folder = os.path.join(os.getcwd(), '../../error_log')
 pathlib.Path(error_log_folder).mkdir(parents=True, exist_ok=True)
 
 error_video_page_path = os.path.join(error_log_folder, 'error_video_page_%s.txt' % time_stamp)
@@ -91,18 +91,14 @@ class Seven18Crawler_multithread():
         for page in tqdm(constraints.list_404):
             single_page_saver.createSingleFile(page, None)
 
-        logger.info('200 pages: %s' % constraints.list_200)
-        logger.info('others pages: %s' % constraints.list_others)
-
     def handle_single_page(self, page):
         # url = common_util.get_page_url(page)
         info = single_page_crawler_by_selenium.crawl_infos_by_selenium(page)
         single_page_saver.save_by_page(page, info)
 
 
-if __name__ == '__main__':
+def launch():
     start = time.time()
-    logger.info('App launched...')
     logger.info('========== Main thread : %s ==========' % (
         'on ,thread num: %d' % constraints.max_size_in_main_threadpool if constraints.switch_on_main_thread else 'off'))
     logger.info('========== Proxy : %s ==========' % ('on' if constraints.switch_on_proxy else 'off'))
@@ -110,8 +106,18 @@ if __name__ == '__main__':
         Seven18Crawler_multithread().crawl1()
     finally:
         end = time.time()
-        logger.info('Download videos times: %d' % constraints.download_video_count)
-        logger.info('Download images times: %d' % constraints.download_image_count)
-        logger.info('Cost time %f seconds.' % (end - start))
+        logger.info('200 pages: %s' % constraints.list_200)
+        logger.info('others pages: %s' % constraints.list_others)
         logger.info('Timeout pages: %s' % constraints.list_timeout)
-        logger.info('Closing app...')
+        
+        logger.info('                  Execute Result                   ')
+        logger.info('---------------------------------------------------')
+        logger.info('     act\t\tbg_images\t  images\t  videos')
+        logger.info('---------------------------------------------------')
+        logger.info('  download\t\t\t%d\t\t\t%d\t\t\t %d' % (
+            constraints.download_bg_image_count, constraints.download_image_count, constraints.download_video_count))
+        logger.info('    skip\t\t\t%d\t\t\t%d\t\t\t %d' % (
+            constraints.skip_download_bg_image_count, constraints.skip_download_image_count,
+            constraints.skip_download_video_count))
+        
+        logger.info('Cost time %f seconds.' % (end - start))
