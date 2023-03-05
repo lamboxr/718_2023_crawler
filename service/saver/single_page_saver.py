@@ -36,7 +36,7 @@ def save_by_page(page, info):
         createSingleFile(page, info)
         return
     elif (info[AttributeCode.VIDEO_URLS.value] is None or len(info[AttributeCode.VIDEO_URLS.value]) == 0) and (
-            info[AttributeCode.IMAGE_URLS.value] is None or len(info[AttributeCode.IMAGE_URLS.value]) == 0):
+            info[AttributeCode.IMAGE_B64S.value] is None or len(info[AttributeCode.IMAGE_B64S.value]) == 0):
         # 图片 视频均不存在
         logger.info('Page "%s" has no media, continue...' % url)
         createSingleFile(page, info)
@@ -91,6 +91,7 @@ def saveData(page_idx, info):
     single_page_folder_path = generate_single_page_folder_path(page_idx, info)
     pathlib.Path(single_page_folder_path).mkdir(parents=True, exist_ok=True)
     saveContent(info, single_page_folder_path)
+    saveBackGroundImgs(info, single_page_folder_path)
     # # imgs
     if constraints.switch_on_save_image:
         saveImgs(info, single_page_folder_path)
@@ -104,7 +105,8 @@ def saveData(page_idx, info):
 def generate_single_page_folder_path(page_idx, info):
     return os.path.join(constraints.out_put,
                         '%s%s%s%s%s' % (
-                            '%05d' % page_idx, '_', info[AttributeCode.DATE.value], '_', info[AttributeCode.TITLE.value]))
+                            '%05d' % page_idx, '_', info[AttributeCode.DATE.value], '_',
+                            info[AttributeCode.TITLE.value]))
 
 
 def saveContent(info, single_page_folder_path):
@@ -118,12 +120,12 @@ def saveContent(info, single_page_folder_path):
         for p_title, link in links.items():
             link_txt += '%s\n%s\n\n' % (p_title, link)
     m3u8_list = info[AttributeCode.VIDEO_URLS.value]
-    img_list = info[AttributeCode.IMAGE_URLS.value]
+    img_list = info[AttributeCode.IMAGE_B64S.value]
     if m3u8_list is not None:
         m3u8s_url += '视频链接(%d):\n' % len(info[AttributeCode.VIDEO_URLS.value])
-    # imgs_url = '图片链接(%d):\n' % len(info[AttributeCode.IMAGE_URLS.value])
+    # imgs_url = '图片链接(%d):\n' % len(info[AttributeCode.IMAGE_B64S.value])
     if img_list is not None:
-        imgs_url = '图片数量: %d:\n' % len(info[AttributeCode.IMAGE_URLS.value])
+        imgs_url = '图片数量: %d:\n' % len(info[AttributeCode.IMAGE_B64S.value])
     if m3u8_list is not None and len(m3u8_list) > 0:
         for i in m3u8_list:
             m3u8s_url += i + '\n'
@@ -145,7 +147,8 @@ def saveContent(info, single_page_folder_path):
     with open(txt_file_path, 'w', encoding='utf-8') as file_object:
         file_object.write(
             '%s\n\n%s\n%s\n%s\n%s\n%s\n' % (
-                info[AttributeCode.URL.value], info[AttributeCode.TITLE.value], info[AttributeCode.CONTENT.value], link_txt, m3u8s_url,
+                info[AttributeCode.URL.value], info[AttributeCode.TITLE.value], info[AttributeCode.CONTENT.value],
+                link_txt, m3u8s_url,
                 imgs_url))
         file_object.close()
 
@@ -206,16 +209,43 @@ def saveImgs(info, single_page_folder_path):
             constraints.download_image_count += 1
 
 
+def saveBackGroundImgs(info, single_page_folder_path):
+    bg_imgs_info = generate_bg_images_info(info, single_page_folder_path)
+    if len(bg_imgs_info) > 0:
+        if is_bg_images_saved(images_info=bg_imgs_info, single_page_folder_path=single_page_folder_path):
+            logger.info('Skipping to save %d images in page %s' % (len(bg_imgs_info), info[AttributeCode.URL.value]))
+            return
+        else:
+            logger.info('Saving %d images in page %s' % (len(bg_imgs_info), info[AttributeCode.URL.value]))
+            if constraints.switch_on_img_thread:
+                with BoundedThreadPoolExecutor(max_workers=constraints.max_image_size_in_threadpool) as t:
+                    all_tasks = [t.submit(lambda p: image_downloader.save(*p),
+                                          [images_url, image_path]) for image_path, images_url in
+                                 bg_imgs_info.items()]
+                    wait(all_tasks, return_when=ALL_COMPLETED)
+            else:
+                for image_path, images_url in bg_imgs_info.items():
+                    image_downloader.save(images_url, image_path)
+            constraints.download_bg_image_count += 1
+
+
 def is_images_saved(images_info, single_page_folder_path):
     return len([img for img in os.listdir(single_page_folder_path) if
-                (not img.endswith('.mp4')) and (not img.endswith('.txt'))]) == len(images_info)
+                (not img.endswith('.mp4')) and (not img.endswith('.txt') and (not ('_bg' in img)))]) == len(
+        images_info)
+
+
+def is_bg_images_saved(images_info, single_page_folder_path):
+    return len([img for img in os.listdir(single_page_folder_path) if
+                (not img.endswith('.mp4')) and (not img.endswith('.txt') and ('_bg' in img))]) == len(
+        images_info)
 
 
 def generate_images_info(info, single_page_folder_path):
     images_info = {}
     img_idx_pattern = ''
     title = info[AttributeCode.TITLE.value]
-    img_urls = info[AttributeCode.IMAGE_URLS.value]
+    img_urls = info[AttributeCode.IMAGE_B64S.value]
     if len(img_urls) > 1:
         img_idx_pattern = '%0' + str(len(str(len(img_urls)))) + 'd'
     idx = 1
@@ -225,6 +255,24 @@ def generate_images_info(info, single_page_folder_path):
             prefix = 'jpg'
         images_info[os.path.join(single_page_folder_path, '%s_%s.%s' % (
             title, img_idx_pattern % idx if len(img_urls) > 1 else '', prefix))] = img_url
+        idx += 1
+    return images_info
+
+
+def generate_bg_images_info(info, single_page_folder_path):
+    images_info = {}
+    img_idx_pattern = ''
+    title = info[AttributeCode.TITLE.value]
+    bg_imgs = info[AttributeCode.IMAGE_BACKGROUND_B64.value]
+    if len(bg_imgs) > 1:
+        img_idx_pattern = '_%0' + str(len(str(len(bg_imgs)))) + 'd'
+    idx = 1
+    for img_url in bg_imgs:
+        prefix = img_url.split(';')[0].split('/')[1]
+        if prefix == 'jpeg':
+            prefix = 'jpg'
+        images_info[os.path.join(single_page_folder_path, '%s_bg%s.%s' % (
+            title, img_idx_pattern % idx if len(bg_imgs) > 1 else '', prefix))] = img_url
         idx += 1
     return images_info
 

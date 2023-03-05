@@ -25,7 +25,7 @@ def crawl_infos_by_selenium(page):
     logger.info("Crawling page: '%s'..." % url)
     info = {AttributeCode.URL.value: url, AttributeCode.STATUS_CODE.value: status_code, AttributeCode.TITLE.value: None,
             AttributeCode.DATE.value: None, AttributeCode.LINKS.value: None, AttributeCode.CONTENT.value: None,
-            AttributeCode.VIDEO_URLS.value: None, AttributeCode.IMAGE_URLS.value: None}
+            AttributeCode.VIDEO_URLS.value: None, AttributeCode.IMAGE_B64S.value: None}
     try:
 
         # if 1 == 1:
@@ -35,6 +35,7 @@ def crawl_infos_by_selenium(page):
             try:
                 edge.get(url)
             except Exception as e:
+                constraints.list_timeout.append(page)
                 logger.error(e)
                 logger.info("Get page '%s' timeout" % url)
                 logger.info("closing page '%s'..." % url)
@@ -64,9 +65,13 @@ def crawl_infos_by_selenium(page):
                 logger.info('Crawling content in %s' % url)
                 info[AttributeCode.CONTENT.value] = crawl_content(html)
 
+                # background image
+                logger.info('Crawling videos in %s' % url)
+                info[AttributeCode.IMAGE_BACKGROUND_B64.value] = crawl_bg_imgs(html)
+
                 # images
                 logger.info('Crawling images in %s' % url)
-                info[AttributeCode.IMAGE_URLS.value] = crawl_imgs(html)
+                info[AttributeCode.IMAGE_B64S.value] = crawl_imgs(html)
 
                 # videos
                 logger.info('Crawling videos in %s' % url)
@@ -191,11 +196,11 @@ def crawl_videos(html):
 
 
 def crawl_all_videos(html):
-    #判断是否 同时存在 极速线路 和快速线路
-    #<div class="content-tabs-head">
-        #<div class="content-tab-title selected" role="tab" data-tab-index="1">极速线路</div>
-        #<div class="content-tab-title " role="tab" data-tab-index="2">快速线路</div>
-    #</div>
+    # 判断是否 同时存在 极速线路 和快速线路
+    # <div class="content-tabs-head">
+    # <div class="content-tab-title selected" role="tab" data-tab-index="1">极速线路</div>
+    # <div class="content-tab-title " role="tab" data-tab-index="2">快速线路</div>
+    # </div>
     has_jisu = False
     has_kuaisu = False
     tabs = html.xpath('//div[starts-with(@class,"content-tab-title")]')
@@ -256,6 +261,20 @@ def crawl_iframe_m3u8_url(iframe_url):
 def crawl_imgs(html):
     img_src_data_list = html.xpath('//div[@class="post-content"]//p//img/@src')
     return img_src_data_list
+
+
+def crawl_bg_imgs(html):
+    styles = html.xpath('//div[@class="blog-background"]/@style')
+    if len(styles):
+        bg_imgs = []
+        for style in styles:
+            try:
+                b64 = style.split('url(')[1].replace('");', '')
+                bg_imgs.append(b64)
+            except Exception as e:
+                logger.error(e)
+        return bg_imgs
+    return []
 
 
 def getDriver(timeout):

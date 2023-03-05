@@ -1,6 +1,7 @@
 # -*- coding:utf-8 -*-
 download_video_count = 0
 download_image_count = 0
+download_bg_image_count = 0
 switch_on_proxy = False
 
 proxies ={
@@ -23,6 +24,8 @@ cache_root = 'D:\\_'
 
 list_200 = []
 list_404 = []
+list_others = []
+list_timeout = []
 img_num_in_page = {}
 error_video_page = {}
 # {

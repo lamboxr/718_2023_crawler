@@ -8,6 +8,8 @@ import pathlib
 import time
 from concurrent.futures import FIRST_COMPLETED, wait, ALL_COMPLETED
 
+from tqdm import tqdm
+
 from factory import LoggerFactory
 from config import page_config, constraints
 from service.crawler import single_page_crawler_by_selenium, _200_collector
@@ -81,14 +83,16 @@ class Seven18Crawler_multithread():
 
         constraints.list_200.sort()
         constraints.list_404.sort()
+        constraints.list_others.sort()
         logger.info('200 pages: %s' % constraints.list_200)
         logger.info('404 pages: %s' % constraints.list_404)
-        for page in constraints.list_200:
+        for page in tqdm(constraints.list_200):
             self.handle_single_page(page)
-        for page in constraints.list_404:
+        for page in tqdm(constraints.list_404):
             single_page_saver.createSingleFile(page, None)
 
         logger.info('200 pages: %s' % constraints.list_200)
+        logger.info('others pages: %s' % constraints.list_others)
 
     def handle_single_page(self, page):
         # url = common_util.get_page_url(page)
@@ -99,9 +103,9 @@ class Seven18Crawler_multithread():
 if __name__ == '__main__':
     start = time.time()
     logger.info('App launched...')
-    logger.info('==========Main thread : %s ==========' % (
+    logger.info('========== Main thread : %s ==========' % (
         'on ,thread num: %d' % constraints.max_size_in_main_threadpool if constraints.switch_on_main_thread else 'off'))
-    logger.info('==========Proxy : %s ==========' % ('on' if constraints.switch_on_proxy else 'off'))
+    logger.info('========== Proxy : %s ==========' % ('on' if constraints.switch_on_proxy else 'off'))
     try:
         Seven18Crawler_multithread().crawl1()
     finally:
@@ -109,4 +113,5 @@ if __name__ == '__main__':
         logger.info('Download videos times: %d' % constraints.download_video_count)
         logger.info('Download images times: %d' % constraints.download_image_count)
         logger.info('Cost time %f seconds.' % (end - start))
+        logger.info('Timeout pages: %s' % constraints.list_timeout)
         logger.info('Closing app...')
