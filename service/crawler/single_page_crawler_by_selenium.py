@@ -5,12 +5,10 @@ import re
 import time
 
 import requests
-from fake_useragent import UserAgent
+
 from lxml import etree
-from selenium import webdriver
-from selenium.webdriver.edge.options import Options
-from selenium.webdriver.edge.service import Service
-from factory import LoggerFactory
+
+from factory import LoggerFactory, DriverFactory
 from config import constraints
 # 获取logger实例，如果参数为空则返回root logger
 from config.code_enum import AttributeCode
@@ -31,7 +29,7 @@ def crawl_infos_by_selenium(page):
         # if 1 == 1:
         if net_util.request(url).status_code == 200:
             logger.info('Check 200 by requests: %s ' % url)
-            edge = getDriver(constraints.timeout)
+            edge = DriverFactory.getEdgeDriver(constraints.timeout)
             try:
                 edge.get(url)
             except Exception as e:
@@ -277,15 +275,3 @@ def crawl_bg_imgs(html):
     return []
 
 
-def getDriver(timeout):
-    s = Service(constraints.edge_driver_path)
-    edge_options = Options()
-    edge_options.add_argument(f'user-agent={UserAgent().random}')
-    # logger.info('Edge user-agent: %s' % edge_options)
-    edge = webdriver.Edge(service=s, options=edge_options)
-    edge.set_window_size(100, 50)
-    edge.minimize_window()
-    edge.set_page_load_timeout(timeout)
-    edge.set_script_timeout(timeout)
-    logger.info("navigator.userAgent: %s" % edge.execute_script("return navigator.userAgent"))
-    return edge

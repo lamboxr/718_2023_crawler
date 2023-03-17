@@ -109,7 +109,6 @@ def launch():
         logger.info('200 pages: %s' % constraints.list_200)
         logger.info('others pages: %s' % constraints.list_others)
         logger.info('Timeout pages: %s' % constraints.list_timeout)
-        
         logger.info('                  Execute Result                   ')
         logger.info('---------------------------------------------------')
         logger.info('     act\t\tbg_images\t  images\t  videos')

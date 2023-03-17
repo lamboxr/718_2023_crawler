@@ -17,12 +17,19 @@ proxy_port = 5010
 edge_driver_path = '../drivers/edgedriver_win64/110.0.1587.49/msedgedriver.exe'
 # driver download url
 # https://www.selenium.dev/zh-cn/documentation/webdriver/getting_started/install_drivers/
+
+
 domain = 'https://www.u718.sx'
 base_url_pattern = "https://www.u718.sx/archives/%d"
+
+
+# domain = 'https://zztt46.com'
+# base_url_pattern = "https://zztt46.com/archives/%d.html"
+
 year = 2023
 
 timeout = 60
-out_put = 'D:\\output\\718\\decrypted'
+out_put = 'D:\\output\\718\\decrypted1'
 cache_root = 'D:\\_'
 
 list_200 = []
@@ -58,6 +65,6 @@ max_image_size_in_threadpool = 8
 
 # start_page = 6253
 # end_page = 6378
-start_page = 4960
-end_page = 4960
+start_page = 508
+end_page = 508
 
