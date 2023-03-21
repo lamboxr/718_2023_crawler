@@ -10,8 +10,8 @@ from concurrent.futures import FIRST_COMPLETED, wait, ALL_COMPLETED
 
 from tqdm import tqdm
 
-from factory import LoggerFactory
 from config import page_config, constraints
+from factory import LoggerFactory
 from service.crawler import single_page_crawler_by_selenium, _200_collector
 from service.saver import single_page_saver
 from t.BoundedThreadPoolExecutor import BoundedThreadPoolExecutor
@@ -27,74 +27,72 @@ error_video_page_path = os.path.join(error_log_folder, 'error_video_page_%s.txt'
 error_img_page_path = os.path.join(error_log_folder, 'error_img_page_%s.txt' % time_stamp)
 
 
-class Seven18Crawler_multithread():
 
-    def crawl(self):
+def crawl(self):
 
-        start_page = page_config.start_page
-        end_page = page_config.end_page
-        if start_page > end_page:
-            _ = start_page
-            start_page = end_page
-            end_page = _
+    start_page = page_config.start_page
+    end_page = page_config.end_page
+    if start_page > end_page:
+        _ = start_page
+        start_page = end_page
+        end_page = _
 
-        loop_size = 100
-        loop_count = (end_page - start_page) // loop_size + 1
+    loop_size = 100
+    loop_count = (end_page - start_page) // loop_size + 1
 
-        for i in range(loop_count):
-            first_in_loop = end_page - loop_size * i
-            last_in_loop = start_page - 1 if i == loop_count - 1 else end_page - loop_size * (i + 1)
-            logger.info('%s', range(first_in_loop, last_in_loop, -1))
+    for i in range(loop_count):
+        first_in_loop = end_page - loop_size * i
+        last_in_loop = start_page - 1 if i == loop_count - 1 else end_page - loop_size * (i + 1)
+        logger.info('%s', range(first_in_loop, last_in_loop, -1))
 
-            if constraints.switch_on_main_thread:
-                with BoundedThreadPoolExecutor(max_workers=constraints.max_size_in_main_threadpool) as t:
-                    all_tasks = [t.submit(self.handle_single_page, page) for page in
-                                 range(first_in_loop, last_in_loop, -1)]
-                    wait(all_tasks, return_when=FIRST_COMPLETED)
-
-            else:
-                for page in range(first_in_loop, last_in_loop, -1):
-                    self.handle_single_page(page)
-
-    def crawl1(self):
-
-        start_page = page_config.start_page
-        end_page = page_config.end_page
-        if start_page > end_page:
-            _ = start_page
-            start_page = end_page
-            end_page = _
-        """
-        #old逻辑
         if constraints.switch_on_main_thread:
             with BoundedThreadPoolExecutor(max_workers=constraints.max_size_in_main_threadpool) as t:
                 all_tasks = [t.submit(self.handle_single_page, page) for page in
-                             range(end_page, start_page - 1, -1)]
-                wait(all_tasks, return_when=ALL_COMPLETED)
+                             range(first_in_loop, last_in_loop, -1)]
+                wait(all_tasks, return_when=FIRST_COMPLETED)
 
         else:
-            for page in range(end_page, start_page - 1, -1):
+            for page in range(first_in_loop, last_in_loop, -1):
                 self.handle_single_page(page)
-        """
-        with BoundedThreadPoolExecutor(max_workers=constraints.check_200_thread_num) as t:
-            all_tasks = [t.submit(_200_collector.collect_200_by_page, page) for page in
+
+def crawl1():
+
+    start_page = page_config.start_page
+    end_page = page_config.end_page
+    if start_page > end_page:
+        _ = start_page
+        start_page = end_page
+        end_page = _
+    """
+    #old逻辑
+    if constraints.switch_on_main_thread:
+        with BoundedThreadPoolExecutor(max_workers=constraints.max_size_in_main_threadpool) as t:
+            all_tasks = [t.submit(self.handle_single_page, page) for page in
                          range(end_page, start_page - 1, -1)]
             wait(all_tasks, return_when=ALL_COMPLETED)
 
-        constraints.list_200.sort()
-        constraints.list_404.sort()
-        constraints.list_others.sort()
-        logger.info('200 pages: %s' % constraints.list_200)
-        logger.info('404 pages: %s' % constraints.list_404)
-        for page in tqdm(constraints.list_200):
+    else:
+        for page in range(end_page, start_page - 1, -1):
             self.handle_single_page(page)
-        for page in tqdm(constraints.list_404):
-            single_page_saver.createSingleFile(page, None)
+    """
+    with BoundedThreadPoolExecutor(max_workers=constraints.check_200_thread_num) as t:
+        all_tasks = [t.submit(_200_collector.collect_200_by_page, page) for page in
+                     range(end_page, start_page - 1, -1)]
+        wait(all_tasks, return_when=ALL_COMPLETED)
 
-    def handle_single_page(self, page):
-        # url = common_util.get_page_url(page)
-        info = single_page_crawler_by_selenium.crawl_infos_by_selenium(page)
-        single_page_saver.save_by_page(page, info)
+    constraints.list_200.sort()
+    constraints.list_404.sort()
+    constraints.list_others.sort()
+    logger.info('200 pages: %s' % constraints.list_200)
+    logger.info('404 pages: %s' % constraints.list_404)
+    for page in tqdm(constraints.list_200):
+        handle_single_page(page)
+    for page in tqdm(constraints.list_404):
+        single_page_saver.createSingleFile(page, None)
+
+def handle_single_page(page):
+    info = single_page_crawler_by_selenium.crawl_infos_by_selenium(page)
+    single_page_saver.save_by_page(page, info)
 
 
 def launch():
@@ -103,7 +101,7 @@ def launch():
         'on ,thread num: %d' % constraints.max_size_in_main_threadpool if constraints.switch_on_main_thread else 'off'))
     logger.info('========== Proxy : %s ==========' % ('on' if constraints.switch_on_proxy else 'off'))
     try:
-        Seven18Crawler_multithread().crawl1()
+        crawl1()
     finally:
         end = time.time()
         logger.info('200 pages: %s' % constraints.list_200)

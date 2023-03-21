@@ -7,7 +7,7 @@ skip_download_image_count = 0
 skip_download_bg_image_count = 0
 switch_on_proxy = False
 
-proxies ={
+proxies = {
     'http': "http://127.0.0.1:7890",
     'https': "http://127.0.0.1:7890"
 }
@@ -22,20 +22,23 @@ edge_driver_path = '../drivers/edgedriver_win64/110.0.1587.49/msedgedriver.exe'
 domain = 'https://www.u718.sx'
 base_url_pattern = "https://www.u718.sx/archives/%d"
 
-
 # domain = 'https://zztt46.com'
 # base_url_pattern = "https://zztt46.com/archives/%d.html"
 
 year = 2023
 
 timeout = 60
-out_put = 'D:\\output\\718\\decrypted1'
+out_put = 'D:\\output\\718\\decrypted'
 cache_root = 'D:\\_'
 
 list_200 = []
 list_404 = []
 list_others = []
 list_timeout = []
+list_200_all = {}
+list_400_all = {}
+list_others_all = {}
+
 img_num_in_page = {}
 error_video_page = {}
 # {
@@ -67,4 +70,3 @@ max_image_size_in_threadpool = 8
 # end_page = 6378
 start_page = 508
 end_page = 508
-

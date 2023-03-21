@@ -18,66 +18,58 @@ logger = LoggerFactory.getLogger(__name__)
 
 
 def crawl_infos_by_selenium(page):
-    status_code = 404
+    status_code = 200
     url = common_util.get_page_url(page)
     logger.info("Crawling page: '%s'..." % url)
     info = {AttributeCode.URL.value: url, AttributeCode.STATUS_CODE.value: status_code, AttributeCode.TITLE.value: None,
             AttributeCode.DATE.value: None, AttributeCode.LINKS.value: None, AttributeCode.CONTENT.value: None,
             AttributeCode.VIDEO_URLS.value: None, AttributeCode.IMAGE_B64S.value: None}
     try:
+        edge = DriverFactory.getEdgeDriver(constraints.timeout)
+        try:
+            edge.get(url)
+        except Exception as e:
+            constraints.list_timeout.append(page)
+            logger.error(e)
+            logger.info("Get page '%s' timeout" % url)
+            logger.info("closing page '%s'..." % url)
+            # 执行js脚本
+            edge.execute_script("window.stop()")
+        # status_code = resp.status_code
 
-        # if 1 == 1:
-        if net_util.request(url).status_code == 200:
-            logger.info('Check 200 by requests: %s ' % url)
-            edge = DriverFactory.getEdgeDriver(constraints.timeout)
-            try:
-                edge.get(url)
-            except Exception as e:
-                constraints.list_timeout.append(page)
-                logger.error(e)
-                logger.info("Get page '%s' timeout" % url)
-                logger.info("closing page '%s'..." % url)
-                # 执行js脚本
-                edge.execute_script("window.stop()")
-            # status_code = resp.status_code
+        # logger.info("Status code of page:%s is '%s'..." % (url, status_code))
 
-            # logger.info("Status code of page:%s is '%s'..." % (url, status_code))
+        html = etree.HTML(edge.page_source)
+        status_code = crawl_404(html)
+        info[AttributeCode.STATUS_CODE.value] = status_code
+        if status_code == 404:
+            logger.info("Page 404: '%s'..." % url)
+            constraints.img_num_in_page[page] = {'code': status_code, 'cpt_num': 0, 'folder_path': ''}
+            return info
+        if status_code == 200:
+            # title
+            logger.info('Crawling title in %s' % url)
+            info[AttributeCode.TITLE.value] = crawl_title(html)
 
-            html = etree.HTML(edge.page_source)
-            status_code = crawl_404(html)
-            info[AttributeCode.STATUS_CODE.value] = status_code
-            if status_code == 404:
-                logger.info("Page 404: '%s'..." % url)
-                constraints.img_num_in_page[page] = {'code': status_code, 'cpt_num': 0, 'folder_path': ''}
-                return info
-            if status_code == 200:
-                # title
-                logger.info('Crawling title in %s' % url)
-                info[AttributeCode.TITLE.value] = crawl_title(html)
+            # date
+            logger.info('Crawling date in %s' % url)
+            info[AttributeCode.DATE.value] = crawl_date(html)
 
-                # date
-                logger.info('Crawling date in %s' % url)
-                info[AttributeCode.DATE.value] = crawl_date(html)
+            # content
+            logger.info('Crawling content in %s' % url)
+            info[AttributeCode.CONTENT.value] = crawl_content(html)
 
-                # content
-                logger.info('Crawling content in %s' % url)
-                info[AttributeCode.CONTENT.value] = crawl_content(html)
+            # background image
+            logger.info('Crawling videos in %s' % url)
+            info[AttributeCode.IMAGE_BACKGROUND_B64.value] = crawl_bg_imgs(html)
 
-                # background image
-                logger.info('Crawling videos in %s' % url)
-                info[AttributeCode.IMAGE_BACKGROUND_B64.value] = crawl_bg_imgs(html)
+            # images
+            logger.info('Crawling images in %s' % url)
+            info[AttributeCode.IMAGE_B64S.value] = crawl_imgs(html)
 
-                # images
-                logger.info('Crawling images in %s' % url)
-                info[AttributeCode.IMAGE_B64S.value] = crawl_imgs(html)
-
-                # videos
-                logger.info('Crawling videos in %s' % url)
-                info[AttributeCode.VIDEO_URLS.value] = crawl_all_videos(html)
-        elif net_util.request(url).status_code == 404:
-            logger.info('Check 404 by requests: ulr is %s ' % url)
-            logger.info('Sleeping 5 seconds...')
-            time.sleep(5)
+            # videos
+            logger.info('Crawling videos in %s' % url)
+            info[AttributeCode.VIDEO_URLS.value] = crawl_all_videos(html)
         return info
 
     except requests.exceptions.ConnectionError as rec:
