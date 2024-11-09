@@ -174,7 +174,9 @@ def saveVideos(info, single_page_folder_path, page):
                     page, fragments_folder_suffix_patter % (i + 1) if len(m3u8_list) > 1 else '')
                 fragments_cache_dir, fragments_folder_name = init_fragments_cache_dir(fragments_folder_name)
                 constraints.download_video_count += 1
-                download_code, cachePath, = m3u8_downloader.download(m3u8_list[i], fragments_cache_dir)
+                constraints.pages_of_download_videos.append(page)
+                dl = m3u8_downloader.M3U8_Download()
+                download_code, cachePath, = dl.download(m3u8_list[i], fragments_cache_dir)
                 if download_code is DownloadCode._200:
                     if cachePath is None:
                         logger.info('Cache video failed: %s - %s' % (output_video_path, m3u8_list[i]))
@@ -184,6 +186,8 @@ def saveVideos(info, single_page_folder_path, page):
                     logger.info('cachePath: %s , savePath: %s' % (cachePath, output_video_path))
                     logger.info('Saving video "%s"...' % output_video_path)
                     os.rename(cachePath, output_video_path)
+                elif download_code is DownloadCode._COMMAND_TOO_LONG.value:
+                    constraints.command_too_long_urls[os.path.basename(fragments_cache_dir)] = m3u8_list[i]
                 else:
                     insert_into_error_log(page, i, m3u8_list[i], output_video_path, download_code)
     else:
@@ -209,13 +213,15 @@ def saveImgs(info, single_page_folder_path):
                 for image_path, images_url in images_info.items():
                     image_downloader.save(images_url, image_path)
             constraints.download_image_count += 1
+            constraints.pages_of_download_images.append(info[AttributeCode.PAGE.value])
 
 
 def saveBackGroundImgs(info, single_page_folder_path):
     bg_imgs_info = generate_bg_images_info(info, single_page_folder_path)
     if len(bg_imgs_info) > 0:
         if is_bg_images_saved(images_info=bg_imgs_info, single_page_folder_path=single_page_folder_path):
-            logger.info('Skipping to save %d background images in page %s' % (len(bg_imgs_info), info[AttributeCode.URL.value]))
+            logger.info(
+                'Skipping to save %d background images in page %s' % (len(bg_imgs_info), info[AttributeCode.URL.value]))
             constraints.skip_download_bg_image_count += 1
             return
         else:

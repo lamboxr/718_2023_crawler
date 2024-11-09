@@ -51,22 +51,22 @@ def resetDir(dir_path):
     os.mkdir(dir_path)
 
 
-def read_file(path):
+def read_file_as_dict(path):
     if not os.path.exists(path) or os.path.isdir(path):
-        return {}
+        return "{}"
     file = open(path, mode='r', encoding='utf-8')
     try:
         return file.read().rstrip()
     except Exception as e:
         logger.error(e)
-        return {}
+        return "{}"
     finally:
         file.close()
 
 
 def read_file_as_json(path):
     try:
-        return json.loads(read_file(path))
+        return json.loads(read_file_as_dict(path))
     except Exception as e:
         logger.error(e)
         return json.loads("{}")

@@ -9,9 +9,11 @@ class DownloadCode(Enum):
     _DOWNLOAD_ERROR = "5"
     _MERGE_ERROR = "6"
     _UNKNOWN = "7"
+    _COMMAND_TOO_LONG = "8"
 
 
 class AttributeCode(Enum):
+    PAGE = 'PAGE'
     URL = 'URL'
     STATUS_CODE = 'STATUS_CODE'
     TITLE = 'TITLE'
