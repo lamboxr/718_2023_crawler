@@ -67,6 +67,7 @@ clean_image_then_save = True
 # clean_video_then_save = True
 
 check_200_thread_num = 1
+loop_size = 20
 
 switch_on_main_thread = False
 # switch_on_main_thread = True

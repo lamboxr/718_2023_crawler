@@ -40,22 +40,22 @@ def crawl(self):
         start_page = end_page
         end_page = _
 
-    loop_size = 20
-    loop_count = (end_page - start_page) // loop_size + 1
+    loop_index = (end_page - start_page) // constraints.loop_size + 1
 
-    for i in range(loop_count):
-        first_in_loop = end_page - loop_size * i
-        last_in_loop = start_page - 1 if i == loop_count - 1 else end_page - loop_size * (i + 1)
-        logger.info('%s', range(first_in_loop, last_in_loop, -1))
+    for i in range(loop_index):
+        self.init_list()
+        start_page_in_loop = constraints.loop_size * i + start_page
+        end_page_in_loop = end_page if i == loop_index - 1 else constraints.loop_size * (i + 1)
+        logger.info('%s', range(start_page_in_loop, end_page_in_loop + 1))
 
         if constraints.switch_on_main_thread:
             with BoundedThreadPoolExecutor(max_workers=constraints.max_size_in_main_threadpool) as t:
                 all_tasks = [t.submit(self.handle_single_page, page) for page in
-                             range(first_in_loop, last_in_loop, -1)]
+                             range(start_page_in_loop, end_page_in_loop + 1)]
                 wait(all_tasks, return_when=FIRST_COMPLETED)
 
         else:
-            for page in range(first_in_loop, last_in_loop, -1):
+            for page in range(start_page_in_loop, end_page_in_loop + 1):
                 self.handle_single_page(page)
     write_too_long_command_2_file()
 
@@ -114,6 +114,7 @@ def write_too_long_command_2_file():
             f.write(json.dumps(urls, indent=4, ensure_ascii=False))
             f.flush()
             f.close()
+
 
 def launch():
     start = time.time()
