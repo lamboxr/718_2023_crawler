@@ -35,10 +35,10 @@ too_long_urls_file_path = os.path.join(too_long_urls_dir, 'too_long_urls_%s.txt'
 def crawl(self):
     start_page = page_config.start_page
     end_page = page_config.end_page
-    if start_page > end_page:
-        _ = start_page
-        start_page = end_page
-        end_page = _
+    # if start_page > end_page:
+    #     _ = start_page
+    #     start_page = end_page
+    #     end_page = _
 
     loop_index = (end_page - start_page) // constraints.loop_size + 1
 
@@ -63,10 +63,10 @@ def crawl(self):
 def crawl1():
     start_page = page_config.start_page
     end_page = page_config.end_page
-    if start_page > end_page:
-        _ = start_page
-        start_page = end_page
-        end_page = _
+    # if start_page > end_page:
+    #     _ = start_page
+    #     start_page = end_page
+    #     end_page = _
     """
     #old逻辑
     if constraints.switch_on_main_thread:
@@ -97,7 +97,7 @@ def crawl1():
         for page in tqdm(constraints.list_404):
             single_page_saver.createSingleFile(page, None)
     else:
-        for page in range(end_page, start_page - 1, -1):
+        for page in range(start_page, end_page + 1):
             handle_single_page(page)
 
 
@@ -105,6 +105,15 @@ def handle_single_page(page):
     info = single_page_crawler_by_selenium.crawl_infos_by_selenium(page)
     if info:
         single_page_saver.save_by_page(page, info)
+
+
+def init_list(self):
+    constraints.list_200 = []
+    constraints.list_404 = []
+    constraints.list_missing = []
+    constraints.list_others = []
+    constraints.list_timeout = []
+    constraints._dict_resp = {}
 
 
 def write_too_long_command_2_file():
