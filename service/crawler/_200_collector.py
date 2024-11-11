@@ -27,4 +27,4 @@ def collect_200_by_page(page):
     elif status_code == 404:
         constraints.list_404.append(page)
     else:
-        constraints.list_others.append(page)
+        constraints.list_others.append(page) 
