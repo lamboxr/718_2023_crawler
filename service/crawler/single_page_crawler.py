@@ -1,14 +1,17 @@
 # -*- coding:utf-8 -*-
 # self is a sample Python script.
+import json
 import re
 
 import requests
 from lxml import etree
 
+from config.constraints import line_types
 from factory import LoggerFactory
 from config import constraints
 # 获取logger实例，如果参数为空则返回root logger
 from config.code_enum import AttributeCode
+from service.saver import single_page_saver
 from util import common_util, net_util
 
 logger = LoggerFactory.getLogger(__name__)
@@ -19,13 +22,15 @@ def crawl_by_page(page):
     try:
         url = common_util.get_page_url(page)
         logger.info("Crawling page: '%s'..." % url)
-        info = {AttributeCode.URL: url, AttributeCode.STATUS_CODE: None, AttributeCode.TITLE: None,
-                AttributeCode.DATE: None, AttributeCode.LINKS: None, AttributeCode.CONTENT: None,
-                AttributeCode.VIDEO_URLS: None, AttributeCode.IMAGE_URLS: None}
+        info = {AttributeCode.URL.value: url, AttributeCode.STATUS_CODE.value: None, AttributeCode.TITLE.value: None,
+                AttributeCode.DATE.value: None, AttributeCode.LINKS.value: None, AttributeCode.CONTENT.value: None,
+                AttributeCode.VIDEO_URLS.value: None, AttributeCode.IMAGE_URLS.value: None,
+                AttributeCode.IMAGE_URLS.value: None,
+                AttributeCode.IMAGE_B64S.value: None, AttributeCode.IMAGE_BG_B64.value: None}
 
         resp = net_util.request(url, 20)
         status_code = resp.status_code
-        info[AttributeCode.STATUS_CODE] = status_code
+        info[AttributeCode.STATUS_CODE.value] = status_code
         logger.info("Status code of page:%s is '%s'..." % (url, status_code))
         if status_code == 404:
             logger.info("Page 404: '%s'..." % url)
@@ -37,22 +42,33 @@ def crawl_by_page(page):
 
             # date
             logger.info('Crawling date in %s' % url)
-            info[AttributeCode.DATE] = crawl_date(page_source)
+            info[AttributeCode.DATE.value] = crawl_date(page_source)
             # title
             logger.info('Crawling title in %s' % url)
-            info[AttributeCode.TITLE] = crawl_title(page_source)
+            info[AttributeCode.TITLE.value] = crawl_title(page_source)
             # links
             logger.info('Crawling links in %s' % url)
-            info[AttributeCode.LINKS] = crawl_links(page_source)
+            info[AttributeCode.LINKS.value] = crawl_links(page_source)
             # content
             logger.info('Crawling content in %s' % url)
-            info[AttributeCode.CONTENT] = crawl_content(page_source)
+            info[AttributeCode.CONTENT.value] = crawl_content(page_source)
             # videos
             logger.info('Crawling videos in %s' % url)
-            info[AttributeCode.VIDEO_URLS] = crawl_videos(page_source)
-            # images
+            info[AttributeCode.VIDEO_URLS.value] = crawl_videos(page_source)
+            # image_num
             logger.info('Crawling images in %s' % url)
-            info[AttributeCode.IMAGE_URLS] = crawl_imgs(page_source)
+            info[AttributeCode.IMAGE_NUM.value] = crawl_img_num(page_source)
+            # image_bg_num
+            logger.info('Crawling images in %s' % url)
+            info[AttributeCode.IMAGE_BG_NUM.value] = crawl_bg_img_num(page_source)
+
+            constraints.img_num_in_page[page] = {AttributeCode.STATUS_CODE.value: status_code,
+                                                 AttributeCode.TITLE.value: info[AttributeCode.TITLE.value],
+                                                 AttributeCode.IMAGE_NUM.value: info[AttributeCode.IMAGE_NUM.value],
+                                                 AttributeCode.IMAGE_BG_NUM.value: info[AttributeCode.IMAGE_BG_NUM.value],
+                                                 AttributeCode.FOLDER_PATH.value: single_page_saver.generate_single_page_folder_path(
+                                                     page,
+                                                     info)}
             return info
 
     except requests.exceptions.ConnectionError as rec:
@@ -72,7 +88,7 @@ def crawl_date(page_source):
     time_elements = page_source.xpath('//meta[starts-with(@itemprop, "datePublished")]/@content')
     logger.debug('timeobj %s', time_elements)
     if len(time_elements) > 0:
-        date = time_elements[0].split('T')[0].replace('-','.')
+        date = time_elements[0].split('T')[0].replace('-', '.')
         # if len(date) == 5:
         #     date = '%s%s%s' % (constraints.year, '.', date)
         #     if '年' in date:
@@ -84,9 +100,9 @@ def crawl_date(page_source):
 # 爬取title
 def crawl_title(page_source):
     title = None
-    h1_elements = page_source.xpath('//h1[starts-with(@class, "joe_detail__title")]')
-    if len(h1_elements) > 0:
-        title = h1_elements[0].text.strip()
+    title_list = page_source.xpath('//h1[starts-with(@class, "post-title")]/text()')
+    if title_list and len(title_list) > 0:
+        title = title_list[0].strip()
         rstr = r"[\/\\\:\*\?\"\\|]"  # '/ \ : * ? " < > |'
         new_title = re.sub(rstr, "_", title)
         if new_title == '.':
@@ -116,41 +132,30 @@ def crawl_content(page_source):
     # content
     text = ''
     try:
-        h2_list = page_source.xpath('//h2')
-        for h2 in h2_list:
-            text += h2.text + '\n'
-        return text
+        h2_list = page_source.xpath(
+            '///blockquote[1]/following-sibling::p[string-length(normalize-space()) > 0 and following-sibling::blockquote]/text()')
+        return '\n'.join(h2_list)
     except Exception as e:
         logger.error(e)
         return text
 
 
 def crawl_videos(paeg_source):
-    m3u8List = paeg_source.xpath('//joe-dplayer/@src')
-    if not len(m3u8List):
-        m3u8List = paeg_source.xpath('//div[@class="box"]/div[starts-with(@class,"item")]/@data-src')
+    m3u8_dict = {}
+    for line_type in line_types:
+        m3u8_dict[line_type] = []
 
-    videoList = []
-    m3u8List = list(set(m3u8List))
-    for m3u8Obj in m3u8List:
-        m3u8Obj = m3u8Obj.replace('<br>', '')
-        try:
-            if net_util.request(m3u8Obj).status_code == 200:
-                videoList.append(m3u8Obj)
-        except Exception as e:
-            logger.error(e)
-    if len(videoList) == 0:
-        player_list = paeg_source.xpath('//joe-dplayer/@player')
-        src_list = paeg_source.xpath('//joe-dplayer/@src')
-        if len(player_list) * len(src_list):
-            for i in range(len(src_list)):
+        data_configs = paeg_source.xpath(
+            '//blockquote[1]/following-sibling::div[@class="content-tabs" and .//div/div[normalize-space(text())="%s"] and following-sibling::blockquote]/div[2]//div/div/@data-config' % line_type)
+        for dc in data_configs:
+            if len(dc):
+                url = json.loads(dc)['video']['url']
                 try:
-                    iframe_url = '%s%s%s' % (constraints.domain, player_list[i], src_list[i].replace('<br>', ''))
-                    scripts_urls = crawl_iframe_m3u8_url(iframe_url)
-                    videoList.extend(scripts_urls)
+                    if net_util.request(url).status_code == 200:
+                        m3u8_dict[line_type].append(url)
                 except Exception as e:
-                    logger.error(e)
-    return videoList
+                    logger.info("url1 is 404: %", url)
+    return m3u8_dict
 
 
 def crawl_iframe_m3u8_url(iframe_url):
@@ -170,8 +175,15 @@ def crawl_iframe_m3u8_url(iframe_url):
 
 
 def crawl_imgs(page_source):
-    img_urls = []
-    imgs = page_source.xpath('//article[@class="joe_detail__article"]//img/@src')
-    for i in imgs:
-        img_urls.append(i if 'http' in i else constraints.domain + i)
+    img_urls = page_source.xpath('//blockquote[1]/following-sibling::p[following-sibling::blockquote[1]]//img/@src')
     return img_urls
+
+
+def crawl_img_num(page_source):
+    img_urls = page_source.xpath('//blockquote[1]/following-sibling::p[following-sibling::blockquote[1]]//img/@src')
+    return len(img_urls)
+
+
+def crawl_bg_img_num(page_source):
+    bg_img = page_source.xpath('//h1[@class="blog-title"]')
+    return len(bg_img)

@@ -22,5 +22,16 @@ class AttributeCode(Enum):
     CONTENT = 'CONTENT'
     VIDEO_URLS = 'VIDEO_URLS'
     IMAGE_URLS = 'IMAGE_URLS'
+    IMAGE_NUM = 'IMAGE_NUM'
+    IMAGE_BG_NUM = 'IMAGE_BG_NUM'
     IMAGE_B64S = 'IMAGE_B64S'
-    IMAGE_BACKGROUND_B64 = 'IMAGE_BACKGROUND_B64'
+    IMAGE_BG_B64 = 'IMAGE_BG_B64'
+    FOLDER_PATH = 'FOLDER_PATH'
+
+class PicExt(Enum):
+    JPEG = 'jpeg'
+    JPG = 'jpg'
+    GIF = 'gif'
+    PNG = 'png'
+    BMP = 'bmp'
+    DEFAULT = 'jpg'

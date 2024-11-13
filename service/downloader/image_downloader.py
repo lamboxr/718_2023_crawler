@@ -10,9 +10,9 @@ logger = LoggerFactory.getLogger(__name__)
 
 def save(srcData, img_path):
     try:
-        if os.path.exists(img_path):
-            logger.info("Skip saving existing image: '%s'..." % img_path)
-            return
+        # if os.path.exists(img_path):
+        #     logger.info("Skip saving existing image: '%s'..." % img_path)
+        #     return
         data = srcData.split(',')[1]
         image_data = base64.b64decode(data)
         logger.info("Saving image: '%s' ..." % img_path)

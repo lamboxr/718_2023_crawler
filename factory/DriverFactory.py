@@ -4,13 +4,13 @@ from selenium import webdriver
 from selenium.webdriver.edge.options import Options
 from selenium.webdriver.edge.service import Service
 
-from config import constraints
+from config import constraints, page_config
 
 logger = LoggerFactory.getLogger(__name__)
 
 
 def getEdgeDriver(timeout):
-    s = Service(constraints.edge_driver_path)
+    s = Service(page_config.edge_driver_path)
     edge_options = Options()
     edge_options.add_argument(f'user-agent={UserAgent().random}')
     # logger.info('Edge user-agent: %s' % edge_options)

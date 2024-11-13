@@ -12,9 +12,11 @@ from concurrent.futures import FIRST_COMPLETED, wait, ALL_COMPLETED
 from tqdm import tqdm
 
 from config import page_config, constraints
+from config.code_enum import AttributeCode
 from config.constraints import pre_collect_on
 from factory import LoggerFactory
-from service.crawler import single_page_crawler_by_selenium, _200_collector
+from service.crawler import single_page_crawler_by_selenium, _200_collector, single_page_crawler, \
+    image_crawler_by_selenium
 from service.saver import single_page_saver
 from t.BoundedThreadPoolExecutor import BoundedThreadPoolExecutor
 
@@ -102,9 +104,11 @@ def crawl1():
 
 
 def handle_single_page(page):
-    info = single_page_crawler_by_selenium.crawl_infos_by_selenium(page)
+    info = single_page_crawler.crawl_by_page(page)
+    # info = single_page_crawler_by_selenium.crawl_infos_by_selenium(page)
     if info:
         single_page_saver.save_by_page(page, info)
+        single_page_saver.save_images_by_page(page, info)
 
 
 def init_list(self):
@@ -135,6 +139,7 @@ def launch():
     finally:
         end = time.time()
         logger.info('200 pages: %s' % constraints.list_200)
+        logger.info('404 pages: %s' % constraints.list_404)
         logger.info('others pages: %s' % constraints.list_others)
         logger.info('Timeout pages: %s' % constraints.list_timeout)
         logger.info('                  Execute Result                   ')

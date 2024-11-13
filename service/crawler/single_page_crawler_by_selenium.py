@@ -66,7 +66,7 @@ def crawl_infos_by_selenium(page):
 
                 # background image
                 logger.info('Crawling videos in %s' % url)
-                info[AttributeCode.IMAGE_BACKGROUND_B64.value] = crawl_bg_imgs(html)
+                info[AttributeCode.IMAGE_BG_B64.value] = crawl_bg_imgs(html)
 
                 # images
                 logger.info('Crawling images in %s' % url)

@@ -25,14 +25,13 @@ proxies = {
 # proxy_host = "127.0.0.1"
 proxy_host = "47.97.1.34"
 proxy_port = 5010
-edge_driver_path = '../drivers/edgedriver_win64/116.0.1938.54/msedgedriver.exe'
-# driver download url
-# https://www.selenium.dev/zh-cn/documentation/webdriver/getting_started/install_drivers/
+
 
 
 domain = 'https://www.ac38yule.com/'
+domain = 'https://www.229.sx/'
 # base_url_pattern = "https://www.u718.sx/archives/%d"
-base_url_pattern = domain+"%d"
+base_url_pattern = domain + "%d"
 
 # domain = 'https://zztt46.com'
 # base_url_pattern = "https://zztt46.com/archives/%d.html"
@@ -42,6 +41,8 @@ year = 2023
 timeout = 60
 out_put = 'D:\\output\\718\\decrypted'
 cache_root = 'D:\\_'
+
+line_types = ['极速线路', '快速线路']
 
 list_200 = []
 list_404 = []
@@ -79,4 +80,6 @@ max_fragment_size_in_threadpool = 16
 switch_on_img_thread = True
 max_image_size_in_threadpool = 8
 
-
+base_second_in_crawl_image = 5
+single_image_second_in_crawl_image = 4
+step_timeout_time_in_crawl_image = 0.5
