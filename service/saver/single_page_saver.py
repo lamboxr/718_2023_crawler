@@ -80,6 +80,7 @@ def save_images_by_page(page, info):
         for img_path, data in img_dict.items():
             image_downloader.save(data, img_path)
         constraints.download_image_count += 1
+    constraints.pages_of_download_images.append(page)
 
 
 def createSingleFile(page, info):
@@ -231,6 +232,7 @@ def saveVideos(info, single_page_folder_path, page):
                     logger.info('cachePath: %s , savePath: %s' % (cachePath, output_video_path))
                     logger.info('Saving video "%s"...' % output_video_path)
                     os.rename(cachePath, output_video_path)
+
                 elif download_code is DownloadCode._COMMAND_TOO_LONG.value:
                     constraints.command_too_long_urls[os.path.basename(fragments_cache_dir)] = m3u8_urls[i]
                 else:
