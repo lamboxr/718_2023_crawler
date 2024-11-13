@@ -15,7 +15,8 @@ def crawl_pics_by_selenium(url, bg_num, pic_num, retry):
     logger.info('Retrying crawling at %d/3 times : %s' % (retry, url))
     timeout = constraints.base_second_in_crawl_image + constraints.single_image_second_in_crawl_image * pic_num * retry
     logger.info('url %s has %d bg_pic, %d pics ,timeout = %d' % (url, bg_num, pic_num, timeout))
-    timeout = 30 if timeout < 30 else timeout
+    timeout = 20 if timeout < 20 else timeout
+    timeout = 180 if timeout > 180 else timeout
     edge = DriverFactory.getEdgeDriver(timeout)
     imgs = []
     bg_img = []
