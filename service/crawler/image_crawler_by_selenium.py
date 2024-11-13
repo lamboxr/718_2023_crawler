@@ -11,10 +11,11 @@ logger = LoggerFactory.getLogger(__name__)
 
 
 # 爬取图片
-def crawl_pics_by_selenium(url, pic_num, retry):
+def crawl_pics_by_selenium(url, bg_num, pic_num, retry):
     logger.info('Retrying crawling at %d/3 times : %s' % (retry, url))
     timeout = constraints.base_second_in_crawl_image + constraints.single_image_second_in_crawl_image * pic_num * retry
-    logger.info('url %s has %d pics ,timeout = %d' % (url, pic_num, timeout))
+    logger.info('url %s has %d bg_pic, %d pics ,timeout = %d' % (url, bg_num, pic_num, timeout))
+    timeout = 30 if timeout < 30 else timeout
     edge = DriverFactory.getEdgeDriver(timeout)
     imgs = []
     bg_img = []
@@ -22,14 +23,15 @@ def crawl_pics_by_selenium(url, pic_num, retry):
         edge.get(url)
         html = etree.HTML(edge.page_source)
         imgs = html.xpath('//blockquote[1]/following-sibling::p[following-sibling::blockquote[1]]/img/@src')
-        bg_img_element = html.xpath('//div[@class="blog-background"]/@style')
-        if len(bg_img_element) and len(bg_img_element[0]):
-            a = bg_img_element[0].split('url("')
-            if len(a) > 1:
-                b = a[1].split('");')
-                if len(b) > 1:
-                    bg_img_base64 = b[0]
-                    bg_img.append(bg_img_base64)
+        if bg_num > 0:
+            bg_img_element = html.xpath('//div[@class="blog-background"]/@style')
+            if len(bg_img_element) and len(bg_img_element[0]):
+                a = bg_img_element[0].split('url("')
+                if len(a) > 1:
+                    b = a[1].split('");')
+                    if len(b) > 1:
+                        bg_img_base64 = b[0]
+                        bg_img.append(bg_img_base64)
 
     except Exception as e:
         logger.error(e)
@@ -42,7 +44,7 @@ def crawl_pics_by_selenium(url, pic_num, retry):
     if len(imgs) < pic_num:
         if retry == 3:
             return imgs
-        return crawl_pics_by_selenium(url, pic_num, retry + 1)
+        return crawl_pics_by_selenium(url, bg_num, pic_num, retry + 1)
     return bg_img, imgs
 
 

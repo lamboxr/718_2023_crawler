@@ -65,22 +65,19 @@ def save_images_by_page(page, info):
         return
     bg_base64_list, image_base64_list = image_crawler_by_selenium.crawl_pics_by_selenium(
         url=info[AttributeCode.URL.value],
+        bg_num=info[
+            AttributeCode.IMAGE_BG_NUM.value],
         pic_num=info[
             AttributeCode.IMAGE_NUM.value],
         retry=1)
     if not bg_skip:
-        imgs_dict = generate_bg_image_url_path_mapper(bg_base64_list, info[AttributeCode.TITLE.value], folder)
-        for img_path, data in imgs_dict.items():
+        bg_dict = generate_bg_image_url_path_mapper(bg_base64_list, info[AttributeCode.TITLE.value], folder)
+        for img_path, data in bg_dict.items():
             image_downloader.save(data, img_path)
         constraints.download_bg_image_count += 1
     if not img_skip:
-        image_base64_list = image_crawler_by_selenium.crawl_pics_by_selenium(url=info[AttributeCode.URL.value],
-                                                                             pic_num=info[
-                                                                                 AttributeCode.IMAGE_NUM.value],
-                                                                             retry=1)
-
-        imgs_dict = generate_image_url_path_mapper(image_base64_list, info[AttributeCode.TITLE.value], folder)
-        for img_path, data in imgs_dict.items():
+        img_dict = generate_image_url_path_mapper(image_base64_list, info[AttributeCode.TITLE.value], folder)
+        for img_path, data in img_dict.items():
             image_downloader.save(data, img_path)
         constraints.download_image_count += 1
 

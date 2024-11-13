@@ -29,7 +29,7 @@ proxy_port = 5010
 
 
 domain = 'https://www.ac38yule.com/'
-domain = 'https://www.229.sx/'
+# domain = 'https://www.229.sx/'
 # base_url_pattern = "https://www.u718.sx/archives/%d"
 base_url_pattern = domain + "%d"
 
@@ -67,7 +67,7 @@ switch_on_save_image = True
 clean_image_then_save = True
 # clean_video_then_save = True
 
-check_200_thread_num = 1
+check_200_thread_num = 8
 loop_size = 20
 
 switch_on_main_thread = False

@@ -81,13 +81,13 @@ def crawl1():
         for page in range(end_page, start_page - 1, -1):
             self.handle_single_page(page)
     """
-    # with BoundedThreadPoolExecutor(max_workers=constraints.check_200_thread_num) as t:
-    #     all_tasks = [t.submit(_200_collector.collect_200_by_page, page) for page in
-    #                  range(end_page, start_page - 1, -1)]
-    #     wait(all_tasks, return_when=ALL_COMPLETED)
 
     if pre_collect_on:
-        _200_collector.collect_200(start_page, end_page)
+        with BoundedThreadPoolExecutor(max_workers=constraints.check_200_thread_num) as t:
+            all_tasks = [t.submit(_200_collector.collect_200_by_page, page) for page in
+                         range(start_page, end_page + 1)]
+            wait(all_tasks, return_when=ALL_COMPLETED)
+        # _200_collector.collect_200(start_page, end_page)
 
         constraints.list_200.sort()
         constraints.list_404.sort()
