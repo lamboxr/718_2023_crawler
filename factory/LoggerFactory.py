@@ -1,7 +1,6 @@
 # -*- coding:utf-8 -*-
 import logging
 
-
 # 日志级别
 # logger.debug('这是 logger debug message')
 # logger.info('这是 logger info message')
@@ -15,15 +14,16 @@ import logging
 # ERROR：更严重的问题,软件没能执行一些功能
 # CRITICAL：一个严重的错误,这表明程序本身可能无法继续运行
 import config.constraints
+from config import user_config
 
 
 def getLogger(appName):
     logger = logging.getLogger(appName)
-    logger.setLevel(level=config.constraints.log_level)
+    logger.setLevel(level=user_config.global_log_level)
 
     logFile = '718.log'
     file_handler = logging.FileHandler(logFile, encoding='utf-8')
-    file_handler.setLevel(logging.DEBUG)
+    file_handler.setLevel(user_config.file_log_level)
     formatter = logging.Formatter("%(asctime)s - %(filename)s[line:%(lineno)d] - %(levelname)s - %(message)s")
     file_handler.setFormatter(formatter)
     if not logger.hasHandlers():
@@ -31,7 +31,7 @@ def getLogger(appName):
 
     console_handler = logging.StreamHandler()
     console_handler.setFormatter(formatter)
-    console_handler.setLevel(config.constraints.log_level)
+    console_handler.setLevel(user_config.console_log_level)
     logger.addHandler(console_handler)
 
     return logger

@@ -202,7 +202,7 @@ class M3U8_Download():
         command = 'cd {} && ffmpeg -i "concat:{}" -acodec copy -vcodec copy -absf aac_adtstoasc {}'.format(
             fragments_folder_path, input_file, output_file)
         logger.debug('executing command to merge video %s: %s' % (output_file, command))
-        os.system(command)
+        os.system(command + " >NUL 2>&1")
         logger.debug('Finish merging fragments to file: %s' % output_file)
         return output_file
 

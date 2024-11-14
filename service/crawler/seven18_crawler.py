@@ -11,7 +11,7 @@ from concurrent.futures import FIRST_COMPLETED, wait, ALL_COMPLETED
 
 from tqdm import tqdm
 
-from config import page_config, constraints
+from config import user_config, constraints
 from config.code_enum import AttributeCode
 from config.constraints import pre_collect_on
 from factory import LoggerFactory
@@ -35,8 +35,8 @@ too_long_urls_file_path = os.path.join(too_long_urls_dir, 'too_long_urls_%s.txt'
 
 
 def crawl(self):
-    start_page = page_config.start_page
-    end_page = page_config.end_page
+    start_page = user_config.start_page
+    end_page = user_config.end_page
     # if start_page > end_page:
     #     _ = start_page
     #     start_page = end_page
@@ -63,8 +63,8 @@ def crawl(self):
 
 
 def crawl1():
-    p_list = list(range(page_config.start_page, page_config.end_page + 1)) if len(
-        page_config.page_list) == 0 else list(set(page_config.page_list))
+    p_list = list(range(user_config.start_page, user_config.end_page + 1)) if len(
+        user_config.page_list) == 0 else list(set(user_config.page_list))
     p_list.sort()
     # if start_page > end_page:
     #     _ = start_page

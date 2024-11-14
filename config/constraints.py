@@ -1,6 +1,8 @@
 # -*- coding:utf-8 -*-
 import logging
 
+from config.user_config import domain
+
 idx_length = 6
 download_video_count = 0
 download_image_count = 0
@@ -29,9 +31,6 @@ proxies = {
 proxy_host = "47.97.1.34"
 proxy_port = 5010
 
-
-
-domain = 'https://www.ac38yule.com/'
 # domain = 'https://www.229.sx/'
 # base_url_pattern = "https://www.u718.sx/archives/%d"
 base_url_pattern = domain + "%d"
@@ -83,8 +82,8 @@ max_fragment_size_in_threadpool = 16
 switch_on_img_thread = True
 max_image_size_in_threadpool = 8
 
-base_second_in_crawl_image = 5
+base_second_in_crawl_image = 180
 single_image_second_in_crawl_image = 4
 step_timeout_time_in_crawl_image = 0.5
 
-log_level = logging.INFO
+edge_handler = None

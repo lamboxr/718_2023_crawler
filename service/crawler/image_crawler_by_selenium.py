@@ -12,12 +12,10 @@ logger = LoggerFactory.getLogger(__name__)
 
 # 爬取图片
 def crawl_pics_by_selenium(url, bg_num, pic_num, retry):
-    logger.info('Retrying crawling at %d/3 times : %s' % (retry, url))
-    timeout = constraints.base_second_in_crawl_image + constraints.single_image_second_in_crawl_image * pic_num * retry
-    timeout = retry * 30 if timeout < retry * 30 else timeout
-    timeout = retry * 45 if timeout > retry * 45 else timeout
-    timeout = 180
-    logger.info('url %s has %d bg_pic, %d pics ,timeout = %d' % (url, bg_num, pic_num, timeout))
+    logger.debug('Retrying crawling at %d/3 times : %s' % (retry, url))
+    # timeout = constraints.base_second_in_crawl_image + constraints.single_image_second_in_crawl_image * pic_num * retry
+    timeout = constraints.base_second_in_crawl_image * (0.5 + retry * 0.5)
+    logger.debug('url %s has %d bg_pic, %d pics ,timeout = %d' % (url, bg_num, pic_num, timeout))
     edge = DriverFactory.getEdgeDriver(timeout)
     imgs = []
     bg_img = []
@@ -37,8 +35,8 @@ def crawl_pics_by_selenium(url, bg_num, pic_num, retry):
 
     except Exception as e:
         logger.error(e)
-        logger.info("Get page '%s' timeout" % url)
-        logger.info("closing page '%s'..." % url)
+        logger.debug("Get page '%s' timeout" % url)
+        logger.debug("closing page '%s'..." % url)
         # 执行js脚本
         edge.execute_script("window.stop()")
         edge.quit()
@@ -48,32 +46,6 @@ def crawl_pics_by_selenium(url, bg_num, pic_num, retry):
             return imgs
         return crawl_pics_by_selenium(url, bg_num, pic_num, retry + 1)
     return bg_img, imgs
-
-
-# def crawl_pics_by_selenium(url, pic_num, retry):
-#     logger.info('Retrying crawling at %d/3 times : %s' % (retry, url))
-#     timeout = constraints.base_second_in_crawl_image + constraints.single_image_second_in_crawl_image * pic_num * retry
-#     logger.info('url %s has %d pics ,timeout = %d' % (url, pic_num, timeout))
-#     imgs = []
-#     chrome = getChromeDriver(timeout)
-#     try:
-#         chrome.get(url)
-#         html = etree.HTML(chrome.page_source)
-#         imgs = html.xpath('//div[@class="client-only-placeholder editormd-preview"]//img[@onload=""]/@src')
-#     except Exception as e:
-#         logger.error(e)
-#         logger.info("Get page '%s' timeout" % url)
-#         logger.info("closing page '%s'..." % url)
-#         # 执行js脚本
-#         chrome.execute_script("window.stop()")
-#         chrome.quit()
-#
-#
-#     if len(imgs) < pic_num:
-#         if retry == 3:
-#             return imgs
-#         return crawl_pics_by_selenium(url, pic_num, retry + 1)
-#     return imgs
 
 
 def getChromeDriver(timeout):
@@ -89,7 +61,3 @@ def getChromeDriver(timeout):
     chrome.set_page_load_timeout(timeout)
     chrome.set_script_timeout(timeout)
     return chrome
-
-
-if __name__ == '__main__':
-    print(crawl_pics_by_selenium('https://455.fun/archives/13223.html'))

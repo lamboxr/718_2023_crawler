@@ -13,13 +13,16 @@ def save(srcData, img_path):
         # if os.path.exists(img_path):
         #     logger.info("Skip saving existing image: '%s'..." % img_path)
         #     return
-        data = srcData.split(',')[1]
-        image_data = base64.b64decode(data)
-        logger.debug("Saving image: '%s' ..." % img_path)
-        with open(img_path, 'wb') as f:
-            f.write(image_data)
-            f.flush()
-            f.close()
+        if srcData.startswith("data:image"):
+            data = srcData.split(',')[1]
+            image_data = base64.b64decode(data)
+            logger.debug("Saving image: '%s' ..." % img_path)
+            with open(img_path, 'wb') as f:
+                f.write(image_data)
+                f.flush()
+                f.close()
+        else:
+            logging.debug('image sourc is not base64 image format: %s' % srcData)
     except Exception as e:
         logging.exception(e)
         logging.debug('save base64 image failed: %s' % img_path)

@@ -142,11 +142,13 @@ def crawl_content(page_source):
 
 def crawl_videos(paeg_source):
     m3u8_dict = {}
+    amt = 0
     for line_type in line_types:
         m3u8_dict[line_type] = []
 
         data_configs = paeg_source.xpath(
             '//blockquote[1]/following-sibling::div[@class="content-tabs" and .//div/div[normalize-space(text())="%s"] and following-sibling::blockquote]/div[2]//div/div/@data-config' % line_type)
+        amt += len(data_configs)
         for dc in data_configs:
             if len(dc):
                 url = json.loads(dc)['video']['url']
@@ -155,6 +157,17 @@ def crawl_videos(paeg_source):
                         m3u8_dict[line_type].append(url)
                 except Exception as e:
                     logger.debug("url1 is 404: %", url)
+    if amt == 0:
+        m3u8_dict['普通线路'] = []
+        other_data_configs = paeg_source.xpath('//div[@class="dplayer"]/@data-config')
+        for dc in other_data_configs:
+            if len(dc):
+                url = json.loads(dc)['video']['url']
+                try:
+                    if net_util.request(url).status_code == 200:
+                        m3u8_dict['普通线路'].append(url)
+                except Exception as e:
+                    logger.debug("url2 is 404: %", url)
     return m3u8_dict
 
 
@@ -180,7 +193,8 @@ def crawl_imgs(page_source):
 
 
 def crawl_img_num(page_source):
-    img_urls = page_source.xpath('//blockquote[1]/following-sibling::p[following-sibling::blockquote[1]]//img/@src')
+    img_urls = page_source.xpath("//blockquote[1]/following-sibling::p[following-sibling::blockquote[1]]/img")
+    # img_urls = page_source.xpath("//blockquote[1]/following-sibling::p[following-sibling::blockquote[1]]/img[not(contains(@src,'_no_pic.png'))]")
     return len(img_urls)
 
 
