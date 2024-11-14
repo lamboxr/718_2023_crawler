@@ -16,6 +16,8 @@ def getEdgeDriver(timeout):
     if os.path.exists(driver_path):
         s = Service(driver_path)
         edge_options = Options()
+        edge_options.add_argument("--headless=old")
+        edge_options.headless = True
         edge_options.add_argument(f'user-agent={UserAgent().random}')
         # logger.info('Edge user-agent: %s' % edge_options)
         edge = webdriver.Edge(service=s, options=edge_options)

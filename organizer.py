@@ -23,8 +23,10 @@ def clear_single_file():
 
 def find_duplicate():
     for i in range(13293):
-        if len([f for f in os.listdir(output) if f.endswith('.txt') and f.startswith('%05d' % i)]) > 1:
-            logger.info('Page %05d has duplicate files.' % i)
+        pattern = '%0' + str(constraints.idx_length) + 'd'
+        if len([f for f in os.listdir(output) if
+                f.endswith('.txt') and f.startswith(pattern % i)]) > 1:
+            logger.info((pattern + ' has duplicate files.') % i)
 
 
 def find_no_media_and_move():

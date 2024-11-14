@@ -55,12 +55,15 @@ def save_images_by_page(page, info):
         image_bg_num_exists = count_image_files_with_pattern(folder, 'bg', True)
         image_num_in_page = info[AttributeCode.IMAGE_NUM.value]
         image_bg_num_in_page = info[AttributeCode.IMAGE_BG_NUM.value]
-        if image_num_in_page == image_num_exists:
-            constraints.skip_download_image_count += 1
-            img_skip = True
+
         if image_bg_num_exists == image_bg_num_in_page:
             constraints.skip_download_bg_image_count += 1
             bg_skip = True
+            logger.info('Skip saving existing bg image')
+        if image_num_in_page == image_num_exists:
+            constraints.skip_download_image_count += 1
+            img_skip = True
+            logger.info('Skip saving existing image')
     if bg_skip and img_skip:
         return
     bg_base64_list, image_base64_list = image_crawler_by_selenium.crawl_pics_by_selenium(
@@ -86,7 +89,7 @@ def save_images_by_page(page, info):
 def createSingleFile(page, info):
     txt_dir = os.path.join(constraints.out_put, 'txt')
     pathlib.Path(txt_dir).mkdir(parents=True, exist_ok=True)
-    file_path = os.path.join(txt_dir, '%05d' % page)  # output/idx
+    file_path = os.path.join(txt_dir, ('%0' + str(constraints.idx_length) + 'd') % page)  # output/idx
     txt = ''
     date_in_path = ''
     title_in_path = ''
@@ -143,7 +146,8 @@ def saveData(page_idx, info):
 def generate_single_page_folder_path(page_idx, info):
     return os.path.join(constraints.out_put,
                         '%s%s%s%s%s' % (
-                            '%05d' % page_idx, '_', info[AttributeCode.DATE.value], '_',
+                            ('%0' + str(constraints.idx_length) + 'd') % page_idx, '_', info[AttributeCode.DATE.value],
+                            '_',
                             info[AttributeCode.TITLE.value]))
 
 

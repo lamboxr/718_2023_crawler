@@ -1,4 +1,5 @@
 # -*- coding:utf-8 -*-
+idx_length = 6
 download_video_count = 0
 download_image_count = 0
 download_bg_image_count = 0
