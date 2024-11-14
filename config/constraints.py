@@ -68,11 +68,11 @@ clean_image_then_save = True
 # clean_video_then_save = True
 
 check_200_thread_num = 8
-loop_size = 20
+loop_size = 100
 
+# switch_on_main_thread = False
 switch_on_main_thread = False
-# switch_on_main_thread = True
-max_size_in_main_threadpool = 5
+max_size_in_main_threadpool = 2
 
 switch_on_video_thread = True
 max_fragment_size_in_threadpool = 16

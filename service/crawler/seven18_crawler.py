@@ -63,8 +63,9 @@ def crawl(self):
 
 
 def crawl1():
-    start_page = page_config.start_page
-    end_page = page_config.end_page
+    p_list = list(range(page_config.start_page, page_config.end_page + 1)) if len(
+        page_config.page_list) == 0 else list(set(page_config.page_list))
+    p_list.sort()
     # if start_page > end_page:
     #     _ = start_page
     #     start_page = end_page
@@ -84,23 +85,35 @@ def crawl1():
 
     if pre_collect_on:
         with BoundedThreadPoolExecutor(max_workers=constraints.check_200_thread_num) as t:
-            all_tasks = [t.submit(_200_collector.collect_200_by_page, page) for page in
-                         range(start_page, end_page + 1)]
+            all_tasks = [t.submit(_200_collector.collect_200_by_page, page) for page in p_list]
             wait(all_tasks, return_when=ALL_COMPLETED)
         # _200_collector.collect_200(start_page, end_page)
 
         constraints.list_200.sort()
         constraints.list_404.sort()
         constraints.list_others.sort()
-        logger.info('200 pages: %s' % constraints.list_200)
-        logger.info('404 pages: %s' % constraints.list_404)
-        for page in tqdm(constraints.list_200):
-            handle_single_page(page)
+        logger.info('200 pages(%d): %s' % (len(constraints.list_200), constraints.list_200))
+        logger.info('404 pages(%d): %s' % (len(constraints.list_404), constraints.list_404))
+
+        p_lists = split_list(constraints.list_200, constraints.loop_size)
+        for p_l in p_lists:
+            logger.info('handle list %s' % p_l)
+            if constraints.switch_on_main_thread:
+                with BoundedThreadPoolExecutor(max_workers=constraints.max_size_in_main_threadpool) as t:
+                    all_tasks = [t.submit(handle_single_page, page) for page in p_l]
+                    wait(all_tasks, return_when=ALL_COMPLETED)
+            else:
+                for page in tqdm(p_l):
+                    handle_single_page(page)
         for page in tqdm(constraints.list_404):
             single_page_saver.createSingleFile(page, None)
     else:
-        for page in range(start_page, end_page + 1):
+        for page in p_list:
             handle_single_page(page)
+
+
+def split_list(input_list, size):
+    return [input_list[i:i + size] for i in range(0, len(input_list), size)]
 
 
 def handle_single_page(page):

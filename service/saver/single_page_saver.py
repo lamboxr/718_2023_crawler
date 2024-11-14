@@ -400,9 +400,10 @@ def count_image_files_with_pattern(directory, pattern, does_match):
 
 def generate_bg_image_url_path_mapper(imgs_list, title, folder_path):
     imgs_dict = {}
-    img_path = os.path.join(folder_path, '%s_bg.%s' % (
-        title, getPicExt(imgs_list[0])))
-    imgs_dict[img_path] = imgs_list[0]
+    if len(imgs_list) > 0:
+        img_path = os.path.join(folder_path, '%s_bg.%s' % (
+            title, getPicExt(imgs_list[0])))
+        imgs_dict[img_path] = imgs_list[0]
     return imgs_dict
 
 
