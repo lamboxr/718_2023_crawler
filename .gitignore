@@ -137,4 +137,4 @@ _ln.lnk
 *.bak
 todo
 *log/*
-config/page_config.py
+config/user_config.py

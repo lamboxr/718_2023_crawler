@@ -43,7 +43,7 @@ def crawl_pics_by_selenium(url, bg_num, pic_num, retry):
 
     if len(imgs) < pic_num:
         if retry == 3:
-            return imgs
+            return bg_img, imgs
         return crawl_pics_by_selenium(url, bg_num, pic_num, retry + 1)
     return bg_img, imgs
 
