@@ -14,11 +14,12 @@ import logging
 # WARNING（默认）：一个迹象表明,一些意想不到的事情发生了,或表明一些问题在不久的将来(例如。磁盘空间低”)。这个软件还能按预期工作。
 # ERROR：更严重的问题,软件没能执行一些功能
 # CRITICAL：一个严重的错误,这表明程序本身可能无法继续运行
+import config.constraints
 
 
 def getLogger(appName):
     logger = logging.getLogger(appName)
-    logger.setLevel(level=logging.DEBUG)
+    logger.setLevel(level=config.constraints.log_level)
 
     logFile = '718.log'
     file_handler = logging.FileHandler(logFile, encoding='utf-8')
@@ -30,7 +31,7 @@ def getLogger(appName):
 
     console_handler = logging.StreamHandler()
     console_handler.setFormatter(formatter)
-    console_handler.setLevel(logging.DEBUG)
+    console_handler.setLevel(config.constraints.log_level)
     logger.addHandler(console_handler)
 
     return logger

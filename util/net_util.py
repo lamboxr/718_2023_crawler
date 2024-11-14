@@ -52,4 +52,4 @@ def down4img(url, output_name, type):
         for chunk in response:
             output_img.write(chunk)
         output_img.close()
-        logger.info(f"下载成功，图片名称：{'.'.join((output_name, type))}")
+        logger.debug(f"下载成功，图片名称：{'.'.join((output_name, type))}")

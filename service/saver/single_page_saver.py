@@ -33,13 +33,13 @@ def save_by_page(page, info):
     elif info[AttributeCode.STATUS_CODE.value] is None:
         return
     elif info[AttributeCode.STATUS_CODE.value] == 404:
-        logger.info("Page '%s' is 404, continue..." % url)
+        logger.debug("Page '%s' is 404, continue..." % url)
         createSingleFile(page, info)
         return
     elif (info[AttributeCode.VIDEO_URLS.value] is None or len(info[AttributeCode.VIDEO_URLS.value]) == 0) and (
             info[AttributeCode.IMAGE_B64S.value] is None or len(info[AttributeCode.IMAGE_B64S.value]) == 0):
         # 图片 视频均不存在
-        logger.info('Page "%s" has no media, continue...' % url)
+        logger.debug('Page "%s" has no media, continue...' % url)
         createSingleFile(page, info)
         return
     else:
@@ -59,11 +59,11 @@ def save_images_by_page(page, info):
         if image_bg_num_exists == image_bg_num_in_page:
             constraints.skip_download_bg_image_count += 1
             bg_skip = True
-            logger.info('Skip saving existing bg image')
+            logger.debug('Skip saving existing bg image')
         if image_num_in_page == image_num_exists:
             constraints.skip_download_image_count += 1
             img_skip = True
-            logger.info('Skip saving existing image')
+            logger.debug('Skip saving existing image')
     if bg_skip and img_skip:
         return
     bg_base64_list, image_base64_list = image_crawler_by_selenium.crawl_pics_by_selenium(
@@ -119,9 +119,9 @@ def createSingleFile(page, info):
 
         file_path = '%s%s%s%s' % (file_path, date_in_path, title_in_path, '.txt')
     if os.path.exists(file_path):
-        logger.info("Skip creating single file %s..." % file_path)
+        logger.debug("Skip creating single file %s..." % file_path)
     else:
-        logger.info("Creating single file '%s'..." % file_path)
+        logger.debug("Creating single file '%s'..." % file_path)
         with open(file_path, 'w', encoding='utf8') as text_file:
             text_file.write(txt)
             text_file.flush()
@@ -186,11 +186,11 @@ def saveContent(info, single_page_folder_path):
     txt_file_path = os.path.join(single_page_folder_path, '%s%s' % (info[AttributeCode.TITLE.value], '.txt'))
 
     if os.path.exists(txt_file_path):
-        # logger.info('Skip saving existing content file: %s ' % filePath)
-        logger.info('Deleting existing content file: %s ' % txt_file_path)
+        # logger.debug('Skip saving existing content file: %s ' % filePath)
+        logger.debug('Deleting existing content file: %s ' % txt_file_path)
         os.remove(txt_file_path)
 
-    logger.info('Saving content file: %s ... ' % txt_file_path)
+    logger.debug('Saving content file: %s ... ' % txt_file_path)
     with open(txt_file_path, 'w', encoding='utf-8') as file_object:
         file_object.write(
             '%s\n\n%s\n%s\n%s\n%s\n' % (
@@ -216,10 +216,10 @@ def saveVideos(info, single_page_folder_path, page):
             output_video_path = os.path.join(single_page_folder_path,
                                              '%s%s%s' % (info[AttributeCode.TITLE.value], suffix, '.mp4'))
             if os.path.exists(output_video_path):
-                logger.info('Skip saving existing video: %s ' % output_video_path)
+                logger.debug('Skip saving existing video: %s ' % output_video_path)
                 constraints.skip_download_video_count += 1
             else:
-                logger.info('Downloading fragments of video: "%s"...' % output_video_path)
+                logger.debug('Downloading fragments of video: "%s"...' % output_video_path)
                 fragments_folder_name = '%d%s' % (
                     page, fragments_folder_suffix_patter % (i + 1) if v_num > 1 else '')
                 fragments_cache_dir, fragments_folder_name = init_fragments_cache_dir(fragments_folder_name)
@@ -229,12 +229,12 @@ def saveVideos(info, single_page_folder_path, page):
                 download_code, cachePath, = dl.download(m3u8_urls[i], fragments_cache_dir)
                 if download_code is DownloadCode._200:
                     if cachePath is None:
-                        logger.info('Cache video failed: %s - %s' % (output_video_path, m3u8_urls[i]))
+                        logger.debug('Cache video failed: %s - %s' % (output_video_path, m3u8_urls[i]))
 
                         insert_into_error_log(page, i, m3u8_urls[i], output_video_path, download_code)  # TODO
                         continue
-                    logger.info('cachePath: %s , savePath: %s' % (cachePath, output_video_path))
-                    logger.info('Saving video "%s"...' % output_video_path)
+                    logger.debug('cachePath: %s , savePath: %s' % (cachePath, output_video_path))
+                    logger.debug('Saving video "%s"...' % output_video_path)
                     os.rename(cachePath, output_video_path)
 
                 elif download_code is DownloadCode._COMMAND_TOO_LONG.value:
@@ -242,18 +242,18 @@ def saveVideos(info, single_page_folder_path, page):
                 else:
                     insert_into_error_log(page, i, m3u8_urls[i], output_video_path, download_code)
     else:
-        logger.info('There is not video to save.')
+        logger.debug('There is not video to save.')
 
 
 def saveImgs(info, single_page_folder_path):
     images_info = generate_images_info(info, single_page_folder_path)
     if len(images_info) > 0:
         if is_images_saved(images_info=images_info, single_page_folder_path=single_page_folder_path):
-            logger.info('Skipping to save %d images in page %s' % (len(images_info), info[AttributeCode.URL.value]))
+            logger.debug('Skipping to save %d images in page %s' % (len(images_info), info[AttributeCode.URL.value]))
             constraints.skip_download_image_count += 1
             return
         else:
-            logger.info('Saving %d images in page %s' % (len(images_info), info[AttributeCode.URL.value]))
+            logger.debug('Saving %d images in page %s' % (len(images_info), info[AttributeCode.URL.value]))
             if constraints.switch_on_img_thread:
                 with BoundedThreadPoolExecutor(max_workers=constraints.max_image_size_in_threadpool) as t:
                     all_tasks = [t.submit(lambda p: image_downloader.save(*p),
@@ -271,12 +271,12 @@ def saveBackGroundImgs(info, single_page_folder_path):
     bg_imgs_info = generate_bg_images_info(info, single_page_folder_path)
     if len(bg_imgs_info) > 0:
         if is_bg_images_saved(images_info=bg_imgs_info, single_page_folder_path=single_page_folder_path):
-            logger.info(
+            logger.debug(
                 'Skipping to save %d background images in page %s' % (len(bg_imgs_info), info[AttributeCode.URL.value]))
             constraints.skip_download_bg_image_count += 1
             return
         else:
-            logger.info('Saving %d background images in page %s' % (len(bg_imgs_info), info[AttributeCode.URL.value]))
+            logger.debug('Saving %d background images in page %s' % (len(bg_imgs_info), info[AttributeCode.URL.value]))
             # if constraints.switch_on_img_thread:
             #     with BoundedThreadPoolExecutor(max_workers=constraints.max_image_size_in_threadpool) as t:
             #         all_tasks = [t.submit(lambda p: image_downloader.save(*p),

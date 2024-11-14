@@ -36,8 +36,8 @@ def crawl_infos_by_selenium(page):
             except Exception as e:
                 constraints.list_timeout.append(page)
                 logger.error(e)
-                logger.info("Get page '%s' timeout" % url)
-                logger.info("closing page '%s'..." % url)
+                logger.debug("Get page '%s' timeout" % url)
+                logger.debug("closing page '%s'..." % url)
                 # 执行js脚本
                 edge.execute_script("window.stop()")
             # status_code = resp.status_code
@@ -48,32 +48,32 @@ def crawl_infos_by_selenium(page):
             status_code = crawl_404(html)
             info[AttributeCode.STATUS_CODE.value] = status_code
             if status_code == 404:
-                logger.info("Page 404: '%s'..." % url)
+                logger.debug("Page 404: '%s'..." % url)
                 constraints.img_num_in_page[page] = {'code': status_code, 'cpt_num': 0, 'folder_path': ''}
                 return info
             if status_code == 200:
                 # title
-                logger.info('Crawling title in %s' % url)
+                logger.debug('Crawling title in %s' % url)
                 info[AttributeCode.TITLE.value] = crawl_title(html)
 
                 # date
-                logger.info('Crawling date in %s' % url)
+                logger.debug('Crawling date in %s' % url)
                 info[AttributeCode.DATE.value] = crawl_date(html)
 
                 # content
-                logger.info('Crawling content in %s' % url)
+                logger.debug('Crawling content in %s' % url)
                 info[AttributeCode.CONTENT.value] = crawl_content(html)
 
                 # background image
-                logger.info('Crawling videos in %s' % url)
+                logger.debug('Crawling videos in %s' % url)
                 info[AttributeCode.IMAGE_BG_B64.value] = crawl_bg_imgs(html)
 
                 # images
-                logger.info('Crawling images in %s' % url)
+                logger.debug('Crawling images in %s' % url)
                 info[AttributeCode.IMAGE_B64S.value] = crawl_imgs(html)
 
                 # videos
-                logger.info('Crawling videos in %s' % url)
+                logger.debug('Crawling videos in %s' % url)
                 info[AttributeCode.VIDEO_URLS.value] = crawl_all_videos(html)
             return info
 
@@ -83,7 +83,7 @@ def crawl_infos_by_selenium(page):
             return info
         except Exception as e:
             logger.error(e)
-            logger.info("Request page error: '%s'." % url)
+            logger.debug("Request page error: '%s'." % url)
             constraints.img_num_in_page[page] = {'code': status_code, 'cpt_num': 0, 'folder_path': ''}
             return info
     else:
@@ -179,7 +179,7 @@ def crawl_videos(html):
                     urls.append(url1)
             except Exception as e:
                 url1_error = True
-                logger.info("url1 is 404: %", url1)
+                logger.debug("url1 is 404: %", url1)
         if url1_error:
             data_config_2 = content.xpath('//div[@data-tab-index="2"]//div/@data-config')
             if len(data_config_2):

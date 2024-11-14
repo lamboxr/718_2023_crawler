@@ -23,7 +23,7 @@ class M3U8_Download():
         try:
             # fragments_cache_dir, fragments_folder_name = init_cache_dir(fragments_folder_name)
             pathlib.Path(fragments_cache_dir).mkdir(parents=True, exist_ok=True)
-            logger.info('Downloading cache files to folder "%s"...' % fragments_cache_dir)
+            logger.debug('Downloading cache files to folder "%s"...' % fragments_cache_dir)
 
             # 获取第一层M3U8文件内容
             resp = net_util.request(m3u8_url)
@@ -47,24 +47,24 @@ class M3U8_Download():
                 idxWidth = len(str(total_count))
                 fragment_name_pattern = '%0' + str(idxWidth) + 'd'
 
-                unknow, key, fragments_info = self.parse_all_fragments(m3u8_url, file_lines, fragment_name_pattern)
+                unknow, key, fragments_debug = self.parse_all_fragments(m3u8_url, file_lines, fragment_name_pattern)
                 if unknow:
                     raise M3U8DownloadException("Can not parse and download the specific m3u8 url: %s" % m3u8_url)
                 else:
                     if constraints.switch_on_video_thread:
-                        logger.info("Downloading fragments of %s with multithread..." % m3u8_url)
+                        logger.debug("Downloading fragments of %s with multithread..." % m3u8_url)
                         with BoundedThreadPoolExecutor(max_workers=constraints.max_fragment_size_in_threadpool) as t:
                             all_tasks = [t.submit(lambda p: self.download_fragment_ts(*p),
                                                   [fragments_cache_dir, key, fragment_url, fragment_file_name,
                                                    total_count]) for fragment_file_name, fragment_url in
-                                         fragments_info.items()]
+                                         fragments_debug.items()]
                             wait(all_tasks, return_when=ALL_COMPLETED)
                     else:
-                        logger.info("Downloading fragments of %s with single thread..." % m3u8_url)
-                        for fragment_file_name, fragment_url in fragments_info.items():
+                        logger.debug("Downloading fragments of %s with single thread..." % m3u8_url)
+                        for fragment_file_name, fragment_url in fragments_debug.items():
                             self.download_fragment_ts(fragments_cache_dir, key, fragment_url, fragment_file_name,
                                                       total_count)
-                    logger.info("Download completely: %s" % m3u8_url)
+                    logger.debug("Download completely: %s" % m3u8_url)
 
                 output_file = self.merge_file(fragments_cache_dir, total_count)
                 self.delete_ts(fragments_cache_dir)
@@ -98,14 +98,14 @@ class M3U8_Download():
         for line_idx, line in enumerate(file_lines):
             if "EXTINF" in line:
                 total_count += 1
-        logger.info('Page has %s fragments videos total: %d' % (m3u8_url, total_count))
+        logger.debug('Page has %s fragments videos total: %d' % (m3u8_url, total_count))
         return total_count
 
     def parse_all_fragments(self, m3u8_url, file_lines, name_pattern):
-        logger.info('Parsing fragments in %s ' % m3u8_url)
+        logger.debug('Parsing fragments in %s ' % m3u8_url)
         unknow = True
         key = ''
-        fragments_info = {}
+        fragments_debug = {}
         fragment_idx = 0
         for line_idx, line in enumerate(file_lines):
             key = self.parse_key(key, line, m3u8_url)
@@ -116,12 +116,12 @@ class M3U8_Download():
                 fragment_url = next_line if next_line.startswith('http:') or next_line.startswith('https:') else \
                     m3u8_url.rsplit("/", 1)[0] + "/" + next_line
                 fragment_file_name = str(fragment_idx)
-                fragments_info[fragment_file_name] = fragment_url
+                fragments_debug[fragment_file_name] = fragment_url
                 fragment_idx += 1
-        return unknow, key, fragments_info
+        return unknow, key, fragments_debug
 
     def download_fragment_ts(self, fragments_folder_path, key, fragment_url, fragment_file_name, total_count):
-        logger.info("Downloading %d/%d file into dir %s: '%s ..." % (
+        logger.debug("Downloading %d/%d file into dir %s: '%s ..." % (
             (int(fragment_file_name) + 1), total_count, fragments_folder_path, fragment_url))
         resp = net_util.request(fragment_url)
         if resp.status_code == 200:
@@ -140,14 +140,14 @@ class M3U8_Download():
                     f.write(resp.content)
                     f.flush()
                     f.close()
-            logger.info("Download completely: %d/%d file into dir %s: '%s ..." % (
+            logger.debug("Download completely: %d/%d file into dir %s: '%s ..." % (
                 (int(fragment_file_name) + 1), total_count, fragments_folder_path, fragment_url))
         else:
             raise M3U8DownloadException("Download error: '%s' to '%s'." % (fragment_url, fragments_folder_path))
 
     def parse_key(self, key, line, m3u8_url):
         if "#EXT-X-KEY" in line:
-            logger.info('parsing key in %s' % m3u8_url)
+            logger.debug('parsing key in %s' % m3u8_url)
             method_pos = line.find("METHOD")
             comma_pos = line.find(",")
             method = line[method_pos:comma_pos].split('=')[1]
@@ -201,16 +201,16 @@ class M3U8_Download():
             os.remove(output_file)
         command = 'cd {} && ffmpeg -i "concat:{}" -acodec copy -vcodec copy -absf aac_adtstoasc {}'.format(
             fragments_folder_path, input_file, output_file)
-        logger.info('executing command to merge video %s: %s' % (output_file, command))
+        logger.debug('executing command to merge video %s: %s' % (output_file, command))
         os.system(command)
-        logger.info('Finish merging fragments to file: %s' % output_file)
+        logger.debug('Finish merging fragments to file: %s' % output_file)
         return output_file
 
     def delete_ts(self, path):
         try:
-            logger.info('Deleting ts files in %s ...' % path)
+            logger.debug('Deleting ts files in %s ...' % path)
             shutil.rmtree(path)
-            logger.info('ts files are deleted: %s' % path)
+            logger.debug('ts files are deleted: %s' % path)
         except:
             logger.error('ts文件删除失败, dir: %s' % path)
 

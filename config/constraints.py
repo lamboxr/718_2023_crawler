@@ -1,4 +1,6 @@
 # -*- coding:utf-8 -*-
+import logging
+
 idx_length = 6
 download_video_count = 0
 download_image_count = 0
@@ -68,7 +70,7 @@ switch_on_save_image = True
 clean_image_then_save = True
 # clean_video_then_save = True
 
-check_200_thread_num = 8
+check_200_thread_num = 32
 loop_size = 100
 
 # switch_on_main_thread = False
@@ -84,3 +86,5 @@ max_image_size_in_threadpool = 8
 base_second_in_crawl_image = 5
 single_image_second_in_crawl_image = 4
 step_timeout_time_in_crawl_image = 0.5
+
+log_level = logging.INFO

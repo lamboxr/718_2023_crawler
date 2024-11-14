@@ -31,9 +31,9 @@ def crawl_by_page(page):
         resp = net_util.request(url, 20)
         status_code = resp.status_code
         info[AttributeCode.STATUS_CODE.value] = status_code
-        logger.info("Status code of page:%s is '%s'..." % (url, status_code))
+        logger.debug("Status code of page:%s is '%s'..." % (url, status_code))
         if status_code == 404:
-            logger.info("Page 404: '%s'..." % url)
+            logger.debug("Page 404: '%s'..." % url)
             constraints.img_num_in_page[page] = {'code': status_code, 'cpt_num': 0, 'folder_path': ''}
             return info
         if status_code == 200:
@@ -41,25 +41,25 @@ def crawl_by_page(page):
             page_source = etree.HTML(resp.text)
 
             # date
-            logger.info('Crawling date in %s' % url)
+            logger.debug('Crawling date in %s' % url)
             info[AttributeCode.DATE.value] = crawl_date(page_source)
             # title
-            logger.info('Crawling title in %s' % url)
+            logger.debug('Crawling title in %s' % url)
             info[AttributeCode.TITLE.value] = crawl_title(page_source)
             # links
-            logger.info('Crawling links in %s' % url)
+            logger.debug('Crawling links in %s' % url)
             info[AttributeCode.LINKS.value] = crawl_links(page_source)
             # content
-            logger.info('Crawling content in %s' % url)
+            logger.debug('Crawling content in %s' % url)
             info[AttributeCode.CONTENT.value] = crawl_content(page_source)
             # videos
-            logger.info('Crawling videos in %s' % url)
+            logger.debug('Crawling videos in %s' % url)
             info[AttributeCode.VIDEO_URLS.value] = crawl_videos(page_source)
             # image_num
-            logger.info('Crawling images in %s' % url)
+            logger.debug('Crawling images in %s' % url)
             info[AttributeCode.IMAGE_NUM.value] = crawl_img_num(page_source)
             # image_bg_num
-            logger.info('Crawling images in %s' % url)
+            logger.debug('Crawling images in %s' % url)
             info[AttributeCode.IMAGE_BG_NUM.value] = crawl_bg_img_num(page_source)
 
             constraints.img_num_in_page[page] = {AttributeCode.STATUS_CODE.value: status_code,
@@ -77,7 +77,7 @@ def crawl_by_page(page):
         return info
     except Exception as e:
         logger.error(e)
-        logger.info("Request page error: '%s'." % url)
+        logger.debug("Request page error: '%s'." % url)
         constraints.img_num_in_page[page] = {'code': status_code, 'cpt_num': 0, 'folder_path': ''}
         return info
 
@@ -154,7 +154,7 @@ def crawl_videos(paeg_source):
                     if net_util.request(url).status_code == 200:
                         m3u8_dict[line_type].append(url)
                 except Exception as e:
-                    logger.info("url1 is 404: %", url)
+                    logger.debug("url1 is 404: %", url)
     return m3u8_dict
 
 

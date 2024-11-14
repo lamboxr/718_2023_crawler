@@ -15,14 +15,14 @@ def save(srcData, img_path):
         #     return
         data = srcData.split(',')[1]
         image_data = base64.b64decode(data)
-        logger.info("Saving image: '%s' ..." % img_path)
+        logger.debug("Saving image: '%s' ..." % img_path)
         with open(img_path, 'wb') as f:
             f.write(image_data)
             f.flush()
             f.close()
     except Exception as e:
         logging.exception(e)
-        logging.info('save base64 image failed: %s' % img_path)
+        logging.debug('save base64 image failed: %s' % img_path)
 
 
 if __name__ == '__main__':
