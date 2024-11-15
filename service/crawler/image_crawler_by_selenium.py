@@ -40,6 +40,7 @@ def crawl_pics_by_selenium(url, bg_num, pic_num, retry):
         # 执行js脚本
         edge.execute_script("window.stop()")
         edge.quit()
+        edge = None
 
     if len(imgs) < pic_num:
         if retry == 3:

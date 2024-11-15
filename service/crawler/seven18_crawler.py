@@ -119,7 +119,7 @@ def split_list(input_list, size):
 def handle_single_page(page):
     info = single_page_crawler.crawl_by_page(page)
     # info = single_page_crawler_by_selenium.crawl_infos_by_selenium(page)
-    if info:
+    if info and info[AttributeCode.STATUS_CODE.value] == 200:
         single_page_saver.save_by_page(page, info)
         single_page_saver.save_images_by_page(page, info)
 
@@ -164,8 +164,13 @@ def launch():
         logger.info('    skip\t\t\t%d\t\t\t%d\t\t\t %d' % (
             constraints.skip_download_bg_image_count, constraints.skip_download_image_count,
             constraints.skip_download_video_count))
-        logger.info('download images pages are %s' % constraints.pages_of_download_images)
-        logger.info('download videos pages are %s' % constraints.pages_of_download_videos)
+        logger.info('download bg image pages(%d): %s' % (
+            len(constraints.pages_of_download_bg_images), constraints.pages_of_download_bg_images))
+        logger.info('download images pages(%d): %s' % (
+            len(constraints.pages_of_download_images), constraints.pages_of_download_images))
+        logger.info('download videos pages(%d): %s' % (
+            len(constraints.pages_of_download_videos), constraints.pages_of_download_videos))
 
         logger.info('too long urls num is %d' % len(constraints.command_too_long_urls))
         logger.info('Cost time %f seconds.' % (end - start))
+

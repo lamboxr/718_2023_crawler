@@ -10,6 +10,7 @@ download_bg_image_count = 0
 skip_download_video_count = 0
 skip_download_image_count = 0
 skip_download_bg_image_count = 0
+pages_of_download_bg_images = []
 pages_of_download_images = []
 pages_of_download_videos = []
 
@@ -20,8 +21,10 @@ switch_on_proxy = False
 
 pre_collect_on = True
 
+
 no_content_str = "\\xe6\\xb2\\xa1\\xe6\\x9c\\x89\\xe6\\x89\\xbe\\xe5\\x88\\xb0\\xe5\\x86\\x85\\xe5\\xae\\xb9"
 no_content_str_eng = "No Content Here"
+
 
 proxies = {
     'http': "http://127.0.0.1:7890",

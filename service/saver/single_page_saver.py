@@ -78,12 +78,13 @@ def save_images_by_page(page, info):
         for img_path, data in bg_dict.items():
             image_downloader.save(data, img_path)
         constraints.download_bg_image_count += 1
+        constraints.pages_of_download_bg_images.append(page)
     if not img_skip:
         img_dict = generate_image_url_path_mapper(image_base64_list, info[AttributeCode.TITLE.value], folder)
         for img_path, data in img_dict.items():
             image_downloader.save(data, img_path)
         constraints.download_image_count += 1
-    constraints.pages_of_download_images.append(page)
+        constraints.pages_of_download_images.append(page)
 
 
 def createSingleFile(page, info):

@@ -19,6 +19,7 @@ def collect_200_by_page(page):
     status_code = resp.status_code
 
     if status_code == 200:
+
         if constraints.no_content_str in str(resp.content) or constraints.no_content_str_eng in str(resp.content):
             constraints.list_404.append(page)
             logger.info("Checking %s: %s ..." % ("404", url))

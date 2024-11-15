@@ -29,8 +29,7 @@ def getEdgeDriver(timeout):
             edge.set_page_load_timeout(timeout)
             edge.set_script_timeout(timeout)
             logger.debug("navigator.userAgent: %s" % edge.execute_script("return navigator.userAgent"))
-            constraints.edge_handler = edge
-        return constraints.edge_handler
+        return edge
     else:
         logger.error("driver path does not exist: %s " % driver_path)
         return None

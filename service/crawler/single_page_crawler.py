@@ -40,12 +40,17 @@ def crawl_by_page(page):
             # 使用xpath
             page_source = etree.HTML(resp.text)
 
+            # title
+            logger.debug('Crawling title in %s' % url)
+            title = crawl_title(page_source)
+            if "文章已删除" in title or "文章已经删除" in title:
+                info[AttributeCode.STATUS_CODE.value] = 404
+                return info
+            info[AttributeCode.TITLE.value] = title
+
             # date
             logger.debug('Crawling date in %s' % url)
             info[AttributeCode.DATE.value] = crawl_date(page_source)
-            # title
-            logger.debug('Crawling title in %s' % url)
-            info[AttributeCode.TITLE.value] = crawl_title(page_source)
             # links
             logger.debug('Crawling links in %s' % url)
             info[AttributeCode.LINKS.value] = crawl_links(page_source)
@@ -65,7 +70,8 @@ def crawl_by_page(page):
             constraints.img_num_in_page[page] = {AttributeCode.STATUS_CODE.value: status_code,
                                                  AttributeCode.TITLE.value: info[AttributeCode.TITLE.value],
                                                  AttributeCode.IMAGE_NUM.value: info[AttributeCode.IMAGE_NUM.value],
-                                                 AttributeCode.IMAGE_BG_NUM.value: info[AttributeCode.IMAGE_BG_NUM.value],
+                                                 AttributeCode.IMAGE_BG_NUM.value: info[
+                                                     AttributeCode.IMAGE_BG_NUM.value],
                                                  AttributeCode.FOLDER_PATH.value: single_page_saver.generate_single_page_folder_path(
                                                      page,
                                                      info)}
